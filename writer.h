@@ -1,3 +1,8 @@
+
+
+/*-------------------------FUNCTIONS-------------------------*/
+int main();
+
 /*
 argumentos
 – fd: identificador da ligação de dados
