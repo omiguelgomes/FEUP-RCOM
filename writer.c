@@ -42,12 +42,11 @@ int main(int argc, char** argv)
     because we don't want to get killed if linenoise sends CTRL-C.
   */
 
+
     fd = open(argv[1], O_RDWR | O_NOCTTY );
     if (fd <0) {perror(argv[1]); exit(-1); }
 
-    printf("hi\n");
     if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
-      printf(argv[1], "%d");
       perror("tcgetattr");
       exit(-1);
     }
@@ -61,7 +60,7 @@ int main(int argc, char** argv)
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
+    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
 
 
 
@@ -80,35 +79,40 @@ int main(int argc, char** argv)
     }
 
     printf("New termios structure set\n");
-    printf("Enter a line to be transmitted: \n");
-
-    //recomended function(gets) is dangerous and deprecated
-    fgets(buf, 255, stdin);
 
 
-    //Create new buffer with exact size of string received, no trash
-    int counter = 0;
-    while(buf[counter] != '\0')
-    {
-      counter++;
-    }
 
-    int bufferSize = counter;
-    counter = 0;
-    char newBuffer[bufferSize + 1]; //acount for '\0' in the end
+    /*for (i = 0; i < 255; i++) {
+      buf[i] = 'a';
+    }*/
 
-    while(counter < bufferSize)
-    {
-      newBuffer[counter] = buf[counter];
-      counter++;
-    }
-    newBuffer[counter] = '\0';
+    fgets(buf, sizeof(buf), stdin);
 
-    //done with the new buffer
-
-    res = write(fd, newBuffer, bufferSize);
+    int len = strlen(buf);
+    
+    /*testing*/
+    //buf[25] = '\n';
+    
+    res = write(fd,buf,len);
     printf("%d bytes written\n", res);
+ 
+    printf("waiting for confirmation...\n");
 
+  /* 
+    O ciclo FOR e as instru��es seguintes devem ser alterados de modo a respeitar 
+    o indicado no gui�o 
+  */
+
+    while (STOP==FALSE) {
+      res = read(fd,buf,255);
+      buf[res]='\0';
+      printf("%s", buf);
+      if (buf[res]=='\0') STOP=TRUE;
+    }
+
+    printf("Confirmation received!\n");
+
+   
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
