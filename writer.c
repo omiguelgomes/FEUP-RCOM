@@ -22,10 +22,12 @@
 
 volatile int STOP=FALSE;
 
+int fd,c, res;
+struct termios oldtio,newtio;
+
 int main(int argc, char** argv)
 {
-    int fd,c, res;
-    struct termios oldtio,newtio;
+
     char buf[255];
     int i, sum = 0, speed = 0;
     
@@ -45,41 +47,8 @@ int main(int argc, char** argv)
     fd = open(argv[1], O_RDWR | O_NOCTTY );
     if (fd <0) {perror(argv[1]); exit(-1); }
 
-    printf("hi\n");
-    if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
-      printf(argv[1], "%d");
-      perror("tcgetattr");
-      exit(-1);
-    }
-
-    bzero(&newtio, sizeof(newtio));
-    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
-    newtio.c_iflag = IGNPAR;
-    newtio.c_oflag = 0;
-
-    /* set input mode (non-canonical, no echo,...) */
-    newtio.c_lflag = 0;
-
-    newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
-
-
-
-  /* 
-    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) pr�ximo(s) caracter(es)
-  */
-
-
-
-    tcflush(fd, TCIOFLUSH);
-
-    if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
-      perror("tcsetattr");
-      exit(-1);
-    }
-
-    printf("New termios structure set\n");
+    //default open, no flags
+    llopen(fd, 0);
     printf("Enter a line to be transmitted: \n");
 
     //recomended function(gets) is dangerous and deprecated
@@ -106,30 +75,63 @@ int main(int argc, char** argv)
 
     //done with the new buffer
 
-    res = write(fd, newBuffer, bufferSize);
-    printf("%d bytes written\n", res);
+    int charWritten = llwrite(fd, newBuffer, counter);
+    if (charWritten < 0)
+      return 1;
+
+    printf("%d bytes written\n", charWritten);
 
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
     }
 
-    close(fd);
-    return 0;
+    
+    return llclose(fd);
 }
 
-
+//como saber se isto deu erro? write devolve
+//sp o nr de chars enviados
 int llwrite(int fd, char * buffer, int length)
 {
-    return 1;
+    int res = write(fd, buffer, length);
+    return res;
 }
 
-int llopen(int porta)
+int llopen(int porta, int flag)
 {
-    return 1;
+    if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
+      perror("tcgetattr");
+      exit(-1);
+    }
+
+    bzero(&newtio, sizeof(newtio));
+    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+    newtio.c_iflag = IGNPAR;
+    newtio.c_oflag = 0;
+
+    /* set input mode (non-canonical, no echo,...) */
+    newtio.c_lflag = 0;
+
+    newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
+    newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
+
+  /* 
+    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
+    leitura do(s) pr�ximo(s) caracter(es)
+  */
+
+    tcflush(fd, TCIOFLUSH);
+
+    if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
+      perror("tcsetattr");
+      exit(-1);
+    }
+
+    printf("New termios structure set\n");
 }
 
-int llclose()
+int llclose(int fd)
 {
-    return 1;
+    return close(fd);
 }

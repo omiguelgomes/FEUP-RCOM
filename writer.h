@@ -1,5 +1,3 @@
-
-
 /*-------------------------FUNCTIONS-------------------------*/
 int main();
 
@@ -24,7 +22,7 @@ retorno
 – identificador da ligação de dados
 – valor negativo em caso de erro
 */
-int llopen(int porta);
+int llopen(int porta, int flag);
 
 /*
 argumentos
