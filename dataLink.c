@@ -13,6 +13,13 @@ int llwrite(int fd, char * buffer, int length)
     return res;
 }
 
+
+int llread(int fd, char * buffer)
+{
+    return 1;
+}
+
+
 int llopen(int porta, int flag)
 {
     if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
@@ -45,6 +52,7 @@ int llopen(int porta, int flag)
 
     printf("New termios structure set\n");
 }
+
 
 int llclose(int fd)
 {
