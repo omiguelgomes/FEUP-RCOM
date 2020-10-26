@@ -10,16 +10,16 @@
 
 typedef enum
 {
-    START = 0,
-    FLAG_OK = 1,
-    A_OK = 2,
-    C_OK = 3,
-    BCC_OK = 4,
-    STOP = 5
+    START,
+    FLAG_OK,
+    A_OK,
+    C_OK,
+    BCC_OK,
+    STOP
 }states;
 
-void set_state(char byte, enum states *state);
+void set_state(char byte, states *state);
 
-void ua_state(char byte, enum states *state);
+void ua_state(char byte, states *state);
 
 #endif

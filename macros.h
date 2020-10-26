@@ -1,7 +1,7 @@
 #ifndef MACROS_H_INCLUDED
 #define MACROS_H_INCLUDED
 
-enum states {START, FLAG_OK, A_OK, C_OK, BCC_OK, STOP};
+//enum states {START, FLAG_OK, A_OK, C_OK, BCC_OK, STOP};
 
 #define TRANSMITER  0
 #define RECEIVER    1

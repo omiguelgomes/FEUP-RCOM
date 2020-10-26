@@ -18,7 +18,7 @@ void create_ua(char *ua)
     ua[4] = FLAG;
 }
 
-void set_state(char byte, enum states *state)
+void set_state(char byte, states *state)
 {
     switch (*state)
     {
@@ -59,7 +59,7 @@ void set_state(char byte, enum states *state)
     }
 }
 
-void ua_state(char byte, enum states *state)
+void ua_state(char byte, states *state)
 {
     switch (*state)
     {

@@ -1,10 +1,12 @@
 
 #include "writer.h"
 
-volatile int STOP=FALSE;
+volatile int END=FALSE;
 
 int fd,c, res;
 struct termios oldtio,newtio;
+extern applicationLayer app;
+extern linkLayer ll;
 
 int main(int argc, char** argv)
 {
@@ -12,24 +14,20 @@ int main(int argc, char** argv)
     char buf[255];
     int i, sum = 0, speed = 0;
     
-    if ( (argc < 2) || 
-  	     ((strcmp("/dev/ttyS10", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS11", argv[1])!=0) )) {
-      printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS10\n");
+    if (argc != 2) {
+      printf("Usage:\n./writer port_number\n");
+      exit(1);
+    }
+    
+    app.fd = atoi(argv[1]);
+
+    if(app.fd != 0 || app.fd != 1 || app.fd != 10 || app.fd != 11){
+      printf("Port number must be {0, 1, 10, 11}");
       exit(1);
     }
 
-
-  /*
-    Open serial port device for reading and writing and not as controlling tty
-    because we don't want to get killed if linenoise sends CTRL-C.
-  */
-
-    fd = open(argv[1], O_RDWR | O_NOCTTY );
-    if (fd <0) {perror(argv[1]); exit(-1); }
-
     //default open, no flags
-    llopen(fd, 0);
+    llopen(app.fd, TRANSMITER);
     printf("Enter a line to be transmitted: \n");
 
     //recomended function(gets) is dangerous and deprecated
