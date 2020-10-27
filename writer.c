@@ -44,6 +44,7 @@ int main(int argc, char** argv)
     because we don't want to get killed if linenoise sends CTRL-C.
   */
 
+
     fd = open(argv[1], O_RDWR | O_NOCTTY );
     if (fd <0) {perror(argv[1]); exit(-1); }
 
@@ -51,36 +52,39 @@ int main(int argc, char** argv)
     llopen(fd, 0);
     printf("Enter a line to be transmitted: \n");
 
-    //recomended function(gets) is dangerous and deprecated
-    fgets(buf, 255, stdin);
 
 
-    //Create new buffer with exact size of string received, no trash
-    int counter = 0;
-    while(buf[counter] != '\0')
-    {
-      counter++;
+    /*for (i = 0; i < 255; i++) {
+      buf[i] = 'a';
+    }*/
+
+    fgets(buf, sizeof(buf), stdin);
+
+    int len = strlen(buf);
+    
+    /*testing*/
+    //buf[25] = '\n';
+    
+    res = write(fd,buf,len);
+    printf("%d bytes written\n", res);
+ 
+    printf("waiting for confirmation...\n");
+
+  /* 
+    O ciclo FOR e as instru��es seguintes devem ser alterados de modo a respeitar 
+    o indicado no gui�o 
+  */
+
+    while (STOP==FALSE) {
+      res = read(fd,buf,255);
+      buf[res]='\0';
+      printf("%s", buf);
+      if (buf[res]=='\0') STOP=TRUE;
     }
 
-    int bufferSize = counter;
-    counter = 0;
-    char newBuffer[bufferSize + 1]; //acount for '\0' in the end
+    printf("Confirmation received!\n");
 
-    while(counter < bufferSize)
-    {
-      newBuffer[counter] = buf[counter];
-      counter++;
-    }
-    newBuffer[counter] = '\0';
-
-    //done with the new buffer
-
-    int charWritten = llwrite(fd, newBuffer, counter);
-    if (charWritten < 0)
-      return 1;
-
-    printf("%d bytes written\n", charWritten);
-
+   
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
