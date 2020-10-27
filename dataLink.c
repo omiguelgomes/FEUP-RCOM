@@ -93,7 +93,8 @@ int llopen(int port, int status)
 
     set_termios();
 
-    if(app.status == TRANSMITER){
+    if(app.status == TRANSMITER)
+    {
 
         // TRANSMITER
 
@@ -151,5 +152,78 @@ int llopen(int port, int status)
 
 int llclose(int fd)
 {
+    int res;
+    char disc_rcv[5], disc_snd[5], ua[5];
+    states state;
+
+    create_disc(*disc_snd);
+    create_ua(*ua);
+
+    if(app.status == TRANSMITER) //case transmiter
+    {   
+        // send disc
+        printf("Sending DISC ...\n");
+        res = write(app.fd, disc_snd, 5);
+           
+        // wait for disc
+        state = START;
+        for(int i = 0; state != STOP; ++i)
+        {
+            read(fd, &disc_rcv, 1);
+            printf("Receiving DISC byte %d: %#x\n", i, disc_rcv[i]);
+            disc_state(disc_rcv[i], &state);
+        }
+
+        // send ua
+
+        printf("Sending UA ...\n");
+        res = write(app.fd, ua, 5);
+    else //case receiver
+    {   
+        // wait for disc
+        state = START;
+        for(int i = 0; state != STOP; ++i)
+        {
+            read(fd, &disc_rcv, 1);
+            printf("Receiving DISC byte %d: %#x\n", i, disc_rcv[i]);
+            disc_state(disc_rcv[i], &state);
+        }
+        
+        // send disc
+        printf("Sending DISC ...\n");
+        res = write(app.fd, disc_snd, 5);
+
+        // wait for ua
+        state = START;
+        for(int i = 0; state != STOP; ++i)
+        {
+            read(fd, &ua, 1);
+            printf("Receiving UA byte %d: %#x\n", i, ua[i]);
+            ua_state(ua[i], &state);
+        }
+
     return close(fd);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
