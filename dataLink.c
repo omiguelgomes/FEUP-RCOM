@@ -1,12 +1,25 @@
 #include "dataLink.h"
 
-volatile int STOP=FALSE;
-
 int c, res;
 struct termios oldtio,newtio;
 
-extern applicationLayer app;
-extern linkLayer ll;
+typedef struct
+{
+    int fd; /*Descritor correspondente à porta série*/
+    int status;         /*TRANSMITTER | RECEIVER*/
+} applicationLayer;
+
+typedef struct {
+    char port[20];
+    int baudRate;
+    unsigned int sequenceNumber;
+    unsigned int timeout;
+    unsigned int numTransmissions;
+    char frame[MAX_SIZE];
+} linkLayer;
+
+applicationLayer app;
+linkLayer ll;
 
 //como saber se isto deu erro? write devolve
 //sp o nr de chars enviados
@@ -178,6 +191,7 @@ int llclose(int fd)
 
         printf("Sending UA ...\n");
         res = write(app.fd, ua, 5);
+    }
     else //case receiver
     {   
         // wait for disc
@@ -201,6 +215,7 @@ int llclose(int fd)
             printf("Receiving UA byte %d: %#x\n", i, ua[i]);
             ua_state(ua[i], &state);
         }
+    }
 
     return close(fd);
 }

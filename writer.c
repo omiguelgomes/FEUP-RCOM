@@ -3,10 +3,25 @@
 
 volatile int END=FALSE;
 
+typedef struct
+{
+    int fd; /*Descritor correspondente à porta série*/
+    int status;         /*TRANSMITTER | RECEIVER*/
+} applicationLayer;
+
+typedef struct {
+    char port[20];
+    int baudRate;
+    unsigned int sequenceNumber;
+    unsigned int timeout;
+    unsigned int numTransmissions;
+    char frame[MAX_SIZE];
+} linkLayer;
+
 int fd,c, res;
 struct termios oldtio,newtio;
-extern applicationLayer app;
-extern linkLayer ll;
+applicationLayer app;
+linkLayer ll;
 
 int main(int argc, char** argv)
 {
@@ -18,10 +33,14 @@ int main(int argc, char** argv)
       printf("Usage:\n./writer port_number\n");
       exit(1);
     }
+
+    printf("%s\n", argv[1]);
     
     app.fd = atoi(argv[1]);
 
-    if(app.fd != 0 || app.fd != 1 || app.fd != 10 || app.fd != 11){
+    printf("%d\n", app.fd);
+
+    if(app.fd != 0 && app.fd != 1 && app.fd != 10 && app.fd != 11){
       printf("Port number must be {0, 1, 10, 11}");
       exit(1);
     }
@@ -53,11 +72,11 @@ int main(int argc, char** argv)
     o indicado no gui�o 
   */
 
-    while (STOP==FALSE) {
+    while (END==FALSE) {
       res = read(fd,buf,255);
       buf[res]='\0';
       printf("%s", buf);
-      if (buf[res]=='\0') STOP=TRUE;
+      if (buf[res]=='\0') END=TRUE;
     }
 
     printf("Confirmation received!\n");

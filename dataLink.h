@@ -7,6 +7,8 @@
 #include <termios.h>
 #include <stdio.h>
 #include "writer.h"
+#include "macros.h"
+#include "stateMachine.h"
 
 
 #include <strings.h>
@@ -15,11 +17,11 @@
 #include <fcntl.h> // for open
 #include <unistd.h> // for close
 
-#define BAUDRATE B38400
-#define MODEMDEVICE "/dev/ttyS1"
-#define _POSIX_SOURCE 1 /* POSIX compliant source */
-#define FALSE 0
-#define TRUE 1
+#define BAUDRATE        B38400
+#define MODEMDEVICE     "/dev/ttyS1"
+#define _POSIX_SOURCE   1 /* POSIX compliant source */
+#define FALSE           0
+#define TRUE            1
 
 /*
 argumentos

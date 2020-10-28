@@ -2,6 +2,7 @@
 #define STATE_MACHINE_H_INCLUDED
 
 #include "macros.h"
+#include "dataLink.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

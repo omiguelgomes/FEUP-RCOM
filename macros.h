@@ -24,19 +24,4 @@
 #define C_REJ(r)    ((0x01) ^ (r) << (7))
 #define BCC(a, c)   (a ^ c)
 
-typedef struct
-{
-    int fd; /*Descritor correspondente à porta série*/
-    int status;         /*TRANSMITTER | RECEIVER*/
-} applicationLayer;
-
-typedef struct {
-    char port[20];
-    int baudRate;
-    unsigned int sequenceNumber;
-    unsigned int timeout;
-    unsigned int numTransmissions;
-    char frame[MAX_SIZE];
-} linkLayer;
-
 #endif
