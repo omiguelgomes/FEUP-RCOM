@@ -37,6 +37,8 @@ int llread(int fd, char * buffer)
 
 int set_termios()
 {
+    printf("setting up termios...\n");
+
     if ( tcgetattr(app.fd, &oldtio) == -1) { /* save current port settings */
       perror("tcgetattr");
       exit(-1);
@@ -72,7 +74,7 @@ int llopen(int port, int status)
 
     printf("Starting llopen!\n");
 
-    if (status != TRANSMITER || status != RECEIVER) return -1;
+    if (status != TRANSMITER && status != RECEIVER) return -1;
 
     app.status = status;
 
@@ -94,7 +96,6 @@ int llopen(int port, int status)
         break;
     default:
         return -1;
-        break;
     }
 
     app.fd = open(ll.port, O_RDWR | O_NOCTTY);
@@ -114,7 +115,8 @@ int llopen(int port, int status)
         // Send SET
 
         char set[5];
-        create_set(*set);
+        create_set(set);
+
         //memcpy(ll.frame, set, 5);
         printf("Sending SET ...\n");
         res = write(app.fd, set, 5);

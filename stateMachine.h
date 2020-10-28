@@ -19,8 +19,16 @@ typedef enum
     STOP
 }states;
 
+void create_set(char *set);
+
+void create_ua(char *ua);
+
+void create_disc(char *disc);
+
 void set_state(char byte, states *state);
 
 void ua_state(char byte, states *state);
+
+void disc_state(char byte, states *state);
 
 #endif

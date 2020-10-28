@@ -33,12 +33,8 @@ int main(int argc, char** argv)
       printf("Usage:\n./writer port_number\n");
       exit(1);
     }
-
-    printf("%s\n", argv[1]);
     
     app.fd = atoi(argv[1]);
-
-    printf("%d\n", app.fd);
 
     if(app.fd != 0 && app.fd != 1 && app.fd != 10 && app.fd != 11){
       printf("Port number must be {0, 1, 10, 11}");
