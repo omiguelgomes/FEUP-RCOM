@@ -1,20 +1,5 @@
 #include "stateMachine.h"
 
-typedef struct
-{
-    int fd; /*Descritor correspondente à porta série*/
-    int status;         /*TRANSMITTER | RECEIVER*/
-} applicationLayer;
-
-typedef struct {
-    char port[20];
-    int baudRate;
-    unsigned int sequenceNumber;
-    unsigned int timeout;
-    unsigned int numTransmissions;
-    char frame[MAX_SIZE];
-} linkLayer;
-
 applicationLayer app;
 linkLayer ll;
 

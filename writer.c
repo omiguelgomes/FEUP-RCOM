@@ -3,21 +3,6 @@
 
 volatile int END=FALSE;
 
-typedef struct
-{
-    int fd; /*Descritor correspondente à porta série*/
-    int status;         /*TRANSMITTER | RECEIVER*/
-} applicationLayer;
-
-typedef struct {
-    char port[20];
-    int baudRate;
-    unsigned int sequenceNumber;
-    unsigned int timeout;
-    unsigned int numTransmissions;
-    char frame[MAX_SIZE];
-} linkLayer;
-
 int fd,c, res;
 struct termios oldtio,newtio;
 applicationLayer app;
