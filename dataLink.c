@@ -1,4 +1,5 @@
 #include "dataLink.h"
+#include "stateMachine.c"
 
 int c, res;
 struct termios oldtio,newtio;
@@ -139,7 +140,8 @@ int llopen(int port, int status)
         
         char ua[5];
 
-        create_ua(*ua);
+        //CHECK IF UA IS ALTERED 
+        create_ua(ua);
         printf("Sending UA ...\n");
         res = write(app.fd, ua, 5);
     }
@@ -156,8 +158,9 @@ int llclose(int fd)
     char disc_rcv[5], disc_snd[5], ua[5];
     states state;
 
-    create_disc(*disc_snd);
-    create_ua(*ua);
+    //CHECK IF THEY ARE ACTUALL ALTERED
+    create_disc(disc_snd);
+    create_ua(ua);
 
     if(app.status == TRANSMITER) //case transmiter
     {   

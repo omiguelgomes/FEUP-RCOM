@@ -1,5 +1,4 @@
-
-#include "writer.h"
+#include "dataLink.c"
 
 volatile int END=FALSE;
 
@@ -31,17 +30,9 @@ int main(int argc, char** argv)
     printf("Enter a line to be transmitted: \n");
 
 
-
-    /*for (i = 0; i < 255; i++) {
-      buf[i] = 'a';
-    }*/
-
     fgets(buf, sizeof(buf), stdin);
 
     int len = strlen(buf);
-    
-    /*testing*/
-    //buf[25] = '\n';
     
     res = write(fd,buf,len);
     printf("%d bytes written\n", res);

@@ -2,7 +2,7 @@
 
 #include "reader.h"
 
-volatile int STOP=FALSE;
+volatile int STOP_BOOL=FALSE;
 
 int main(int argc, char** argv)
 {
@@ -62,11 +62,11 @@ int main(int argc, char** argv)
     printf("New termios structure set\n");
 
 
-    while (STOP==FALSE) {
+    while (STOP_BOOL==FALSE) {
       res = read(fd,buf,255);
       buf[res]='\0';
       printf(":%s:%d\n", buf, res);
-      if (buf[res]=='\0') STOP=TRUE;
+      if (buf[res]=='\0') STOP_BOOL=TRUE;
     }
 
     int len = strlen(buf);
