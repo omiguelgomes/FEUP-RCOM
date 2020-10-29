@@ -12,12 +12,27 @@ int main(int argc, char** argv)
 
     char buf[255];
     int i, sum = 0, speed = 0;
-    
-    if (argc != 2) {
-      printf("Usage:\n./writer port_number\n");
+
+    if ( (argc < 2) || 
+  	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
+  	      (strcmp("/dev/ttyS1", argv[1])!=0) && 
+  	      (strcmp("/dev/ttyS10", argv[1])!=0) && 
+  	      (strcmp("/dev/ttyS11", argv[1])!=0) )) {
+      printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS10\n");
       exit(1);
     }
-    
+
+    char *s = argv[1];
+    int n = 9;
+    char *s2 = s + n;
+    while (*s2)
+    {
+      *s = *s2;
+      ++s;
+      ++s2;
+   }
+   *s = '\0';
+
     app.fd = atoi(argv[1]);
 
     if(app.fd != 0 && app.fd != 1 && app.fd != 10 && app.fd != 11){
