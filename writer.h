@@ -12,7 +12,6 @@
 #include <fcntl.h> // for open
 #include <unistd.h> // for close
 #include "stateMachine.h"
-#include "dataLink.h"
 #include "macros.h"
 #include "dataLink.h"
 

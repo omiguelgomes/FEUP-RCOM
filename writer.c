@@ -1,5 +1,6 @@
-
 #include "writer.h"
+#include "macros.h"
+#include "dataLink.h"
 
 volatile int END=FALSE;
 
@@ -30,8 +31,6 @@ int main(int argc, char** argv)
     llopen(app.fd, TRANSMITER);
     printf("Enter a line to be transmitted: \n");
 
-
-
     /*for (i = 0; i < 255; i++) {
       buf[i] = 'a';
     }*/
@@ -57,7 +56,10 @@ int main(int argc, char** argv)
       res = read(fd,buf,255);
       buf[res]='\0';
       printf("%s", buf);
-      if (buf[res]=='\0') STOP=TRUE;
+      if (buf[res]=='\0'){
+        //STOP=TRUE;
+        printf("stop =true");
+      }
     }
 
     printf("Confirmation received!\n");
