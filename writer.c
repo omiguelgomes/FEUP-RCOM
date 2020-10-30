@@ -22,6 +22,7 @@ int main(int argc, char** argv)
       exit(1);
     }
 
+    //parsing argv[1]
     char *s = argv[1];
     int n = 9;
     char *s2 = s + n;
@@ -39,6 +40,27 @@ int main(int argc, char** argv)
       printf("Port number must be {0, 1, 10, 11}");
       exit(1);
     }
+
+    int timeout;
+    printf("What should the timeout be?\n");
+    if(scanf("%d", &timeout) != 1)
+    {
+      printf("Invalid number\n");
+      return 1;
+    }
+
+    #undef TIMEOUT
+    #define TIMEOUT timeout
+
+    int nrOfAttempts;
+    printf("What should the max attemps be?\n");
+    if(scanf("%d", &nrOfAttempts) != 1)
+    {
+      printf("Invalid number\n");
+      return 1;
+    }
+    #undef MAX_ATTEMPTS
+    #define MAX_ATTEMPTS nrOfAttempts
 
     //default open, no flags
     llopen(app.fd, TRANSMITER);

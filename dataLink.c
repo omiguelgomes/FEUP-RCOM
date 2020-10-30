@@ -159,8 +159,12 @@ int llclose(int fd)
     states state;
 
     //CHECK IF THEY ARE ACTUALL ALTERED
+    printf("disc before: %s\n", disc_snd);
+    printf("ua before: %s\n", ua);
     create_disc(disc_snd);
     create_ua(ua);
+    printf("disc after: %s\n", disc_snd);
+    printf("ua after: %s\n", ua);
 
     if(app.status == TRANSMITER) //case transmiter
     {   

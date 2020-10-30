@@ -23,6 +23,8 @@
 #define C_RR(r)     ((0x05) ^ (r) << (7))
 #define C_REJ(r)    ((0x01) ^ (r) << (7))
 #define BCC(a, c)   (a ^ c)
+#define MAX_ATTEMPTS
+#define TIMEOUT
 
 typedef struct
 {
