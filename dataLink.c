@@ -7,18 +7,61 @@ struct termios oldtio,newtio;
 applicationLayer app;
 linkLayer ll;
 
-//como saber se isto deu erro? write devolve
-//sp o nr de chars enviados
 int llwrite(int fd, char * buffer, int length)
 {
-    int res = write(fd, buffer, length);
+    int totalBytesRemaining = length;
+    int bytesSent = 0;
+    while (totalBytesRemaining > 0)
+    {
+        int bytesToSend = totalBytesRemaining >= DATA_SIZE ? DATA_SIZE : totalBytesRemaining;
+        unsigned char *trama = malloc((bytesToSend + 6) * sizeof(unsigned char));
+
+        trama[0] = FLAG;
+        trama[1] = A_SND;
+        trama[2] = C_SND;
+        trama[3] = BCC(A_SND, C_SND);
+        for (int i = 1; i <= bytesToSend; i++)
+        {
+            trama[3+i] = buffer[bytesSent];
+            bytesSent++;
+        }
+        trama[4 + bytesToSend] = BCC(A_SND, C_SND);
+        trama[5 + bytesToSend] = FLAG;
+
+        // for (int i = 4; i < 4 + bytesToSend; i++)
+        // {
+        //     printf("trama[%d]: %c\n", i, trama[i]);
+        // }
+
+        // for (int i = 0; i < 9; i++)
+        // {
+        //     printf("Sent this byte %d: %#x\n", i, trama[i]);
+        // }
+
+        int res = write(fd, trama, bytesToSend + 6);
+        totalBytesRemaining -= bytesToSend;
+    }
     return res;
 }
 
 
 int llread(int fd, char * buffer)
 {
-    return 1;
+    read(fd, buffer, MAX_SIZE);
+    // if (buffer[0] != FLAG) return 1;
+    // if(buffer[1] != A_SND) return 1;
+    // if(buffer[2] != C_SND) return 1;
+    // if(buffer[3] != BCC(A_SND, C_SND)) return 1;
+
+    //current string sent comes in with 3 bytes of info at a time, will have to be changed
+    for (int i = 4; i < 7; i++)
+    {
+        printf("buffer[%d]: %c\n", i, buffer[i]);
+    }
+    
+    // if(buffer[i+1] != FLAG)
+    //     return 1;
+    return 0;
 }
 
 int set_termios()
@@ -57,6 +100,7 @@ int set_termios()
 
 int llopen(int port, int status)
 {
+    tcflush(app.fd, TCIOFLUSH);
 
     printf("Starting llopen!\n");
 
@@ -121,15 +165,14 @@ int llopen(int port, int status)
     }
     else
     {
-
-        // RECEIVER
+        // READER
 
         // Receive SET
 
         states state = START;
         int result[MAX_SIZE];
 
-        for(int i = 0; state != STOP; ++i)
+        for(int i = 0; state != STOP; i++)
         {
             res = read(app.fd, &result[i], 1);
             printf("Receiving SET byte %d: %#x\n", i, result[i]);
@@ -138,9 +181,8 @@ int llopen(int port, int status)
 
         // Send UA
         
-        char ua[5];
+        char *ua = malloc(6*sizeof(char));
 
-        //CHECK IF UA IS ALTERED 
         create_ua(ua);
         printf("Sending UA ...\n");
         res = write(app.fd, ua, 5);

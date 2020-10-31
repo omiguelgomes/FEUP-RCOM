@@ -12,6 +12,8 @@
 #define LAB_PORT_0  0
 #define LAB_PORT_1  1
 
+#define DATA_SIZE 3
+
 #define FLAG        0x7E
 
 #define A_SND       0x03                    // A(campo de endereço) Comandos enviados pelo Emissor / Respostas enviadas pelo Receptor

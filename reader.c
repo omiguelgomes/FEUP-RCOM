@@ -1,6 +1,5 @@
-
-
 #include "reader.h"
+#include "dataLink.c"
 
 volatile int STOP_BOOL=FALSE;
 
@@ -8,7 +7,7 @@ int main(int argc, char** argv)
 {
     int fd,c, res;
     struct termios oldtio,newtio;
-    char buf[255];
+    char *buf = malloc(MAX_SIZE*sizeof(char));
 
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
@@ -19,73 +18,39 @@ int main(int argc, char** argv)
       exit(1);
     }
 
+    //parsing argv[1]
+    char *s = argv[1];
+    int n = 9;
+    char *s2 = s + n;
+    while (*s2)
+    {
+      *s = *s2;
+      ++s;
+      ++s2;
+   }
+   *s = '\0';
 
-  /*
-    Open serial port device for reading and writing and not as controlling tty
-    because we don't want to get killed if linenoise sends CTRL-C.
-  */
-  
-    
-    fd = open(argv[1], O_RDWR | O_NOCTTY );
-    if (fd <0) {perror(argv[1]); exit(-1); }
+    app.fd = atoi(argv[1]);
 
-    if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
-      perror("tcgetattr");
-      exit(-1);
+    if(app.fd != 0 && app.fd != 1 && app.fd != 10 && app.fd != 11){
+      printf("Port number must be {0, 1, 10, 11}\n");
+      exit(1);
+    }
+    llopen(app.fd, RECEIVER);
+
+    //condition to be replaced to alarm
+    while(TRUE)
+    {
+      if(llread(app.fd, buf) == 1)
+        break;
     }
 
-    bzero(&newtio, sizeof(newtio));
-    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
-    newtio.c_iflag = IGNPAR;
-    newtio.c_oflag = 0;
-
-    /* set input mode (non-canonical, no echo,...) */
-    newtio.c_lflag = 0;
-
-    newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
-
-
-
-  /* 
-    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) pr�ximo(s) caracter(es)
-  */
-
-
-
-    tcflush(fd, TCIOFLUSH);
-
-    if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
-      perror("tcsetattr");
-      exit(-1);
-    }
-
-    printf("New termios structure set\n");
-
-
-    while (STOP_BOOL==FALSE) {
-      res = read(fd,buf,255);
-      buf[res]='\0';
-      printf(":%s:%d\n", buf, res);
-      if (buf[res]=='\0') STOP_BOOL=TRUE;
-    }
-
-    int len = strlen(buf);
-
-    printf("sending confirmation...\n");
-
-    res = write(fd,buf,len);
-    //printf("%d bytes written\n", res);
-
-    printf("confirmation sent!\n");
-
-  /* 
+    /* 
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
   */
 
-    tcsetattr(fd,TCSANOW,&oldtio);
-    close(fd);
+    tcsetattr(app.fd,TCSANOW,&oldtio);
+    close(app.fd);
     return 0;
 }
 

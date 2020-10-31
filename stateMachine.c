@@ -3,6 +3,8 @@
 applicationLayer app;
 linkLayer ll;
 
+//int main() { return 0; }
+
 void create_set(char *set)
 {
     set[0] = FLAG;
@@ -87,7 +89,6 @@ void ua_state(char byte, states *state)
                 *state = START;
             }
             break;
-
         case A_OK:
             if(byte == C_SND)
                 *state = C_OK;

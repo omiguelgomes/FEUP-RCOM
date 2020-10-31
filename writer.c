@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     app.fd = atoi(argv[1]);
 
     if(app.fd != 0 && app.fd != 1 && app.fd != 10 && app.fd != 11){
-      printf("Port number must be {0, 1, 10, 11}");
+      printf("Port number must be {0, 1, 10, 11}\n");
       exit(1);
     }
 
@@ -64,38 +64,37 @@ int main(int argc, char** argv)
 
     //default open, no flags
     llopen(app.fd, TRANSMITER);
-    printf("Enter a line to be transmitted: \n");
 
-
-    fgets(buf, sizeof(buf), stdin);
+    strcpy(buf, "Wadduppppppppppppp bitches!");
 
     int len = strlen(buf);
-    
-    res = write(fd,buf,len);
-    printf("%d bytes written\n", res);
- 
-    printf("waiting for confirmation...\n");
 
-  /* 
-    O ciclo FOR e as instru��es seguintes devem ser alterados de modo a respeitar 
-    o indicado no gui�o 
-  */
+    llwrite(app.fd, buf, len);
+    //   res = write(fd,buf,len);
+    //   printf("%d bytes written\n", res);
 
-    while (END==FALSE) {
-      res = read(fd,buf,255);
-      buf[res]='\0';
-      printf("%s", buf);
-      if (buf[res]=='\0') END=TRUE;
-    }
+    //   printf("waiting for confirmation...\n");
 
-    printf("Confirmation received!\n");
+    // /*
+    //   O ciclo FOR e as instru��es seguintes devem ser alterados de modo a respeitar
+    //   o indicado no gui�o
+    // */
+
+    //   while (END==FALSE) {
+    //     res = read(fd,buf,255);
+    //     buf[res]='\0';
+    //     printf("%s", buf);
+    //     if (buf[res]=='\0') END=TRUE;
+    //   }
+
+    //   printf("Confirmation received!\n");
 
    
-    if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
+    if ( tcsetattr(app.fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
     }
-
-    
-    return llclose(fd);
+    close(app.fd);
+    return 0;
+    //return llclose(fd);
 }
