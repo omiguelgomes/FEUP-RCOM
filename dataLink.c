@@ -28,7 +28,7 @@ int llwrite(int fd, char * buffer, int length)
         trama[4 + bytesToSend] = BCC(A_SND, C_SND);
         trama[5 + bytesToSend] = FLAG;
 
-        // for (int i = 4; i < 4 + bytesToSend; i++)
+        // for (int i = 4; i < 7; i++)
         // {
         //     printf("trama[%d]: %c\n", i, trama[i]);
         // }
@@ -53,12 +53,12 @@ int llread(int fd, char * buffer)
     // if(buffer[2] != C_SND) return 1;
     // if(buffer[3] != BCC(A_SND, C_SND)) return 1;
 
-    //current string sent comes in with 3 bytes of info at a time, will have to be changed
+    //current string sent comes in with 3 bytes of info at a time, will have to be changed to while buffer[i] != FLAG
     for (int i = 4; i < 7; i++)
     {
         printf("buffer[%d]: %c\n", i, buffer[i]);
     }
-    
+
     // if(buffer[i+1] != FLAG)
     //     return 1;
     return 0;
