@@ -9,6 +9,7 @@
 #include "writer.h"
 #include "macros.h"
 #include "stateMachine.h"
+#include <signal.h>
 
 
 #include <strings.h>

@@ -12,21 +12,28 @@
 #define LAB_PORT_0  0
 #define LAB_PORT_1  1
 
-#define DATA_SIZE 3
+#define DATA_SIZE       3
+#define FRAME_SIZE      5
 
-#define FLAG        0x7E
+#define FLAG            0x7E
 
-#define A_SND       0x03                    // A(campo de endereço) Comandos enviados pelo Emissor / Respostas enviadas pelo Receptor
-#define A_RCV       0x01                    // A(campo de endereço) Comandos enviados pelo Receptor / Respostas enviadas pelo Emissor
+#define A_SND           0x03                    // A(campo de endereço) Comandos enviados pelo Emissor / Respostas enviadas pelo Receptor
+#define A_RCV           0x01                    // A(campo de endereço) Comandos enviados pelo Receptor / Respostas enviadas pelo Emissor
 
-#define C_SND       0x03
-#define C_RCV       0x07
-#define C_DISC      0x0B
-#define C_RR(r)     ((0x05) ^ (r) << (7))
-#define C_REJ(r)    ((0x01) ^ (r) << (7))
-#define BCC(a, c)   (a ^ c)
+#define C_SND           0x03
+#define C_RCV           0x07
+#define C_DISC          0x0B
+#define C_RR(r)         ((0x05) ^ (r) << (7))
+#define C_REJ(r)        ((0x01) ^ (r) << (7))
+#define C_I(r)          ((0x40) ^ (r) << (6))
+#define BCC(a, c)       (a ^ c)
 #define MAX_ATTEMPTS
 #define TIMEOUT
+
+#define ESC             0x7D
+#define MASK            0x20
+#define MASKED_FLAG     (FLAG^MASK)
+#define MASKED_ESC      (ESC^MASK)
 
 typedef struct
 {
@@ -40,6 +47,7 @@ typedef struct {
     unsigned int sequenceNumber;
     unsigned int timeout;
     unsigned int numTransmissions;
+    unsigned int frameSize;
     char frame[MAX_SIZE];
 } linkLayer;
 

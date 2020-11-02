@@ -10,6 +10,7 @@ linkLayer ll;
 int main(int argc, char** argv)
 {
     char buf[255];
+    char result[MAX_SIZE];
     int i, sum = 0, speed = 0;
 
     if (argc != 2) {
@@ -26,6 +27,8 @@ int main(int argc, char** argv)
     }
 
     llopen(app.fd, RECEIVER);
+
+    llread(app.fd, result);
 
     //condition to be replaced to alarm
     /*while(TRUE)

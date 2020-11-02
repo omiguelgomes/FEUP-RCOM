@@ -13,7 +13,7 @@ int main(int argc, char** argv)
     char buf[255];
     int i, sum = 0, speed = 0;
 
-    if (argc != 2) {
+    if (argc != 3) {
       printf("Usage:\n./writer port_number\n");
       exit(1);
     }
@@ -26,53 +26,28 @@ int main(int argc, char** argv)
       exit(1);
     }
 
-    int timeout;
     printf("What should the timeout be?\n");
-    if(scanf("%d", &timeout) != 1)
+    if(scanf("%d", &ll.timeout) != 1)
     {
       printf("Invalid number\n");
       return 1;
     }
 
-    #undef TIMEOUT
-    #define TIMEOUT timeout
-
-    int nrOfAttempts;
     printf("What should the max attemps be?\n");
-    if(scanf("%d", &nrOfAttempts) != 1)
+    if(scanf("%d", &ll.numTransmissions) != 1)
     {
       printf("Invalid number\n");
       return 1;
     }
-    #undef MAX_ATTEMPTS
-    #define MAX_ATTEMPTS nrOfAttempts
 
-    //default open, no flags
+    int fileSize = openFile(*buf, argv[2]);
+
+    //printf("%s\n", buf);
+
     llopen(app.fd, TRANSMITER);
 
-    //strcpy(buf, "Wadduppppppppppppp bitches!");
-
-    //int len = strlen(buf);
-
-    //llwrite(app.fd, buf, len);
-    //   res = write(fd,buf,len);
-    //   printf("%d bytes written\n", res);
-
-    //   printf("waiting for confirmation...\n");
-
-    // /*
-    //   O ciclo FOR e as instru��es seguintes devem ser alterados de modo a respeitar
-    //   o indicado no gui�o
-    // */
-
-    //   while (END==FALSE) {
-    //     res = read(fd,buf,255);
-    //     buf[res]='\0';
-    //     printf("%s", buf);
-    //     if (buf[res]=='\0') END=TRUE;
-    //   }
-
-    //   printf("Confirmation received!\n");
+    llwrite(app.fd, "ola adeus", 10);
+    //llwrite(app.fd, buf, fileSize);
 
    
     if ( tcsetattr(app.fd,TCSANOW,&oldtio) == -1) {
