@@ -1,4 +1,4 @@
-#include "dataLink.c"
+#include "writer.h"
 
 volatile int END=FALSE;
 
@@ -13,26 +13,11 @@ int main(int argc, char** argv)
     char buf[255];
     int i, sum = 0, speed = 0;
 
-    if ( (argc < 2) || 
-  	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS1", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS10", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS11", argv[1])!=0) )) {
-      printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS10\n");
+    if (argc != 2) {
+      printf("Usage:\n./writer port_number\n");
       exit(1);
     }
 
-    //parsing argv[1]
-    char *s = argv[1];
-    int n = 9;
-    char *s2 = s + n;
-    while (*s2)
-    {
-      *s = *s2;
-      ++s;
-      ++s2;
-   }
-   *s = '\0';
 
     app.fd = atoi(argv[1]);
 
@@ -65,11 +50,11 @@ int main(int argc, char** argv)
     //default open, no flags
     llopen(app.fd, TRANSMITER);
 
-    strcpy(buf, "Wadduppppppppppppp bitches!");
+    //strcpy(buf, "Wadduppppppppppppp bitches!");
 
-    int len = strlen(buf);
+    //int len = strlen(buf);
 
-    llwrite(app.fd, buf, len);
+    //llwrite(app.fd, buf, len);
     //   res = write(fd,buf,len);
     //   printf("%d bytes written\n", res);
 
@@ -94,7 +79,9 @@ int main(int argc, char** argv)
       perror("tcsetattr");
       exit(-1);
     }
-    close(app.fd);
+    llclose(app.fd);
+
+    printf("Program executed correctly!\n");
     return 0;
     //return llclose(fd);
 }

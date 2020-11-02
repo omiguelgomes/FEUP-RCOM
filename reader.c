@@ -1,34 +1,22 @@
 #include "reader.h"
-#include "dataLink.c"
 
 volatile int STOP_BOOL=FALSE;
 
+int fd,c, res;
+struct termios oldtio,newtio;
+applicationLayer app;
+linkLayer ll;
+
 int main(int argc, char** argv)
 {
-    int fd,c, res;
-    struct termios oldtio,newtio;
-    char *buf = malloc(MAX_SIZE*sizeof(char));
+    char buf[255];
+    int i, sum = 0, speed = 0;
 
-    if ( (argc < 2) || 
-  	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS1", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS10", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS11", argv[1])!=0) )) {
-      printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS10\n");
+    if (argc != 2) {
+      printf("Usage:\n./writer port_number\n");
       exit(1);
     }
 
-    //parsing argv[1]
-    char *s = argv[1];
-    int n = 9;
-    char *s2 = s + n;
-    while (*s2)
-    {
-      *s = *s2;
-      ++s;
-      ++s2;
-   }
-   *s = '\0';
 
     app.fd = atoi(argv[1]);
 
@@ -36,10 +24,11 @@ int main(int argc, char** argv)
       printf("Port number must be {0, 1, 10, 11}\n");
       exit(1);
     }
+
     llopen(app.fd, RECEIVER);
 
     //condition to be replaced to alarm
-    while(TRUE)
+    /*while(TRUE)
     {
       if(llread(app.fd, buf) == 1)
         break;
@@ -50,7 +39,8 @@ int main(int argc, char** argv)
   */
 
     tcsetattr(app.fd,TCSANOW,&oldtio);
-    close(app.fd);
+    llclose(app.fd);
+    printf("Program executed correctly!\n");
     return 0;
 }
 

@@ -1,7 +1,5 @@
 #include "dataLink.h"
-#include "stateMachine.c"
 
-int c, res;
 struct termios oldtio,newtio;
 
 applicationLayer app;
@@ -9,6 +7,8 @@ linkLayer ll;
 
 int llwrite(int fd, char * buffer, int length)
 {
+    printf("Starting llwrite...\n");
+    int res;
     int totalBytesRemaining = length;
     int bytesSent = 0;
     while (totalBytesRemaining > 0)
@@ -41,12 +41,14 @@ int llwrite(int fd, char * buffer, int length)
         int res = write(fd, trama, bytesToSend + 6);
         totalBytesRemaining -= bytesToSend;
     }
+    printf("llwrite executed correctly!\n");
     return res;
 }
 
 
 int llread(int fd, char * buffer)
 {
+    printf("Starting llread...\n");
     read(fd, buffer, MAX_SIZE);
     // if (buffer[0] != FLAG) return 1;
     // if(buffer[1] != A_SND) return 1;
@@ -61,6 +63,7 @@ int llread(int fd, char * buffer)
 
     // if(buffer[i+1] != FLAG)
     //     return 1;
+    printf("llread executed correctly!\n");
     return 0;
 }
 
@@ -100,8 +103,6 @@ int set_termios()
 
 int llopen(int port, int status)
 {
-    tcflush(app.fd, TCIOFLUSH);
-
     printf("Starting llopen!\n");
 
     if (status != TRANSMITER && status != RECEIVER) return -1;
@@ -144,17 +145,21 @@ int llopen(int port, int status)
 
         // Send SET
 
+        int res;
         char set[5];
         create_set(set);
 
-        //memcpy(ll.frame, set, 5);
+        for(int i = 0; i < 5; i++){
+            printf("set byte %d: %#x\n", i, set[i]);
+        }
+
         printf("Sending SET ...\n");
         res = write(app.fd, set, 5);
 
         // Receive UA
 
         states state = START;
-        int result[MAX_SIZE];
+        char result[MAX_SIZE];
 
         for(int i = 0; state != STOP; ++i)
         {
@@ -169,10 +174,11 @@ int llopen(int port, int status)
 
         // Receive SET
 
+        int res;
         states state = START;
-        int result[MAX_SIZE];
+        char result[MAX_SIZE];
 
-        for(int i = 0; state != STOP; i++)
+        for(int i = 0; state != STOP; ++i)
         {
             res = read(app.fd, &result[i], 1);
             printf("Receiving SET byte %d: %#x\n", i, result[i]);
@@ -180,37 +186,38 @@ int llopen(int port, int status)
         }
 
         // Send UA
-        
-        char *ua = malloc(6*sizeof(char));
+
+        char ua[5];
 
         create_ua(ua);
         printf("Sending UA ...\n");
         res = write(app.fd, ua, 5);
+
     }
 
-    printf("New termios structure set\n");
+    printf("llopen executed correctly\n");
 
     return app.fd;
 }
 
-
 int llclose(int fd)
 {
+
+    printf("\nStarting llclose...\n");
     int res;
     char disc_rcv[5], disc_snd[5], ua[5];
     states state;
+    
 
-    //CHECK IF THEY ARE ACTUALL ALTERED
-    printf("disc before: %s\n", disc_snd);
-    printf("ua before: %s\n", ua);
+    printf("Creating DISCONNECT!\n");
     create_disc(disc_snd);
+    printf("Creating UA!\n");
     create_ua(ua);
-    printf("disc after: %s\n", disc_snd);
-    printf("ua after: %s\n", ua);
 
     if(app.status == TRANSMITER) //case transmiter
     {   
         // send disc
+
         printf("Sending DISC ...\n");
         res = write(app.fd, disc_snd, 5);
            
@@ -218,7 +225,7 @@ int llclose(int fd)
         state = START;
         for(int i = 0; state != STOP; ++i)
         {
-            read(fd, &disc_rcv, 1);
+            read(fd, &disc_rcv[i], 1);
             printf("Receiving DISC byte %d: %#x\n", i, disc_rcv[i]);
             disc_state(disc_rcv[i], &state);
         }
@@ -232,9 +239,10 @@ int llclose(int fd)
     {   
         // wait for disc
         state = START;
+        //for(int i = 0; state != STOP; ++i)
         for(int i = 0; state != STOP; ++i)
         {
-            read(fd, &disc_rcv, 1);
+            read(fd, &disc_rcv[i], 1);
             printf("Receiving DISC byte %d: %#x\n", i, disc_rcv[i]);
             disc_state(disc_rcv[i], &state);
         }
@@ -247,7 +255,7 @@ int llclose(int fd)
         state = START;
         for(int i = 0; state != STOP; ++i)
         {
-            read(fd, &ua, 1);
+            read(fd, &ua[i], 1);
             printf("Receiving UA byte %d: %#x\n", i, ua[i]);
             ua_state(ua[i], &state);
         }
@@ -255,6 +263,7 @@ int llclose(int fd)
 
     return close(fd);
 }
+
 
 
 
