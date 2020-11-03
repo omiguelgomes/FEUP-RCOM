@@ -66,4 +66,8 @@ retorno
 – valor negativo em caso de erro*/
 int llclose();
 
+int openFile(char *buffer, char *fileName);
+
+int stuffing(const unsigned char *info, size_t size, unsigned char *stuffed_info);
+
 #endif

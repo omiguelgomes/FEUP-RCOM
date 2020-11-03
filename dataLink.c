@@ -92,7 +92,7 @@ int openFile(char *buffer, char *fileName)
 {
     FILE *fp;
     long lSize; 
-    int c;
+    char *c;
 
     fp = fopen (fileName , "r" );
     if( !fp ) perror(fileName),exit(1);
