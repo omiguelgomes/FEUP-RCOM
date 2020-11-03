@@ -40,13 +40,11 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    int fileSize = openFile(*buf, argv[2]);
-
-    //printf("%s\n", buf);
+    int fileSize = openFile(buf, argv[2]);
 
     llopen(app.fd, TRANSMITER);
 
-    llwrite(app.fd, "ola adeus", 10);
+    llwrite(app.fd, buf, fileSize);
     //llwrite(app.fd, buf, fileSize);
 
    

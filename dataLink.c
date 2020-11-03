@@ -91,34 +91,26 @@ int destuffing(const unsigned char *stuffed_info, size_t size, unsigned char *in
 int openFile(char *buffer, char *fileName)
 {
     FILE *fp;
-    long lSize;
+    long lSize; 
+    int c;
 
-    fp = fopen (fileName , "rb" );
+    fp = fopen (fileName , "r" );
     if( !fp ) perror(fileName),exit(1);
 
     fseek( fp , 0L , SEEK_END);
     lSize = ftell( fp );
     rewind( fp );
 
-    /* allocate memory for entire content */
-    buffer = calloc( 1, lSize+1 );
-    if( !buffer ) fclose(fp),fputs("memory alloc fails",stderr),exit(1);
-
-    /* copy the file into the buffer */
-    if( 1!=fread( buffer , lSize, 1 , fp) )
-      fclose(fp),free(buffer),fputs("entire read fails",stderr),exit(1);
-
-    /* do your work here, buffer is a string contains the whole text */
+    c = fgets(buffer, MAX_SIZE, fp);
 
     fclose(fp);
-    free(buffer);
 
     return lSize;
 }
 
 int llwrite(int fd, char *buffer, int length)
 {
-    printf("Starting llwrite!\n");
+    printf("\nStarting llwrite!\n");
     char result[255];
     int res;
     int rej = 0;
@@ -154,7 +146,7 @@ int llwrite(int fd, char *buffer, int length)
 
 int llread(int fd, char *buffer)
 {
-    printf("Starting llread!\n");
+    printf("\nStarting llread!\n");
     int res;
     int stuffed_size = 0;
     char result[255];
@@ -227,7 +219,7 @@ int set_termios()
 
 int llopen(int port, int status)
 {
-    printf("Starting llopen!\n");
+    printf("\nStarting llopen!\n");
 
     if (status != TRANSMITER && status != RECEIVER) return -1;
 
