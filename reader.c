@@ -13,8 +13,8 @@ int main(int argc, char** argv)
     char result[MAX_SIZE];
     int i, sum = 0, speed = 0;
 
-    if (argc != 1) {
-      printf("Usage:\n./writer port_number\n");
+    if (argc != 2) {
+      printf("Usage:\n./reader port_number\n");
       exit(1);
     }
 

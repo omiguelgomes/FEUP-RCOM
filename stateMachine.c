@@ -170,7 +170,6 @@ void ua_state(char byte, states *state)
                 *state = FLAG_OK;
             else *state = START;
             break;
-
         case C_OK:
             if(byte == BCC(A_SND, C_SND))
                 *state = BCC_OK;
@@ -190,6 +189,7 @@ void ua_state(char byte, states *state)
 void disc_state(char byte, states *state)
 {
   char a;
+  //printf("Received byte: %#x, and am in state: %d\n", byte, *state);
   switch (*state)
   {
   case START:

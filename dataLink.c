@@ -1,33 +1,41 @@
 #include "dataLink.h"
+#include <stdbool.h>
+#include<errno.h>
 
 struct termios oldtio,newtio;
 
 applicationLayer app;
 linkLayer ll;
 int count = 0;
+bool alarmFlag = FALSE;
 
 void alarmHandler()
 {
-    tcflush(app.fd, TCIOFLUSH);
+    // tcflush(app.fd, TCIOFLUSH);
 
-    if ((ll.numTransmissions - 1) == count)
-    {
-        count++;
-        printf("Can't connect to receiver! (failed attempt number %d) \n", count);
-        if (tcsetattr(app.fd, TCSANOW, &oldtio) == -1)
-        {
-            perror("tcsetattr");
-            close(app.fd);
-            exit(-1);
-        }
-        close(app.fd);
-        exit(-1);
-    }
+    // if ((ll.numTransmissions - 1) == count)
+    // {
+    //     count++;
+    //     printf("Can't connect to receiver! (failed attempt number %d) \n", count);
+    //     if (tcsetattr(app.fd, TCSANOW, &oldtio) == -1)
+    //     {
+    //         perror("tcsetattr");
+    //         close(app.fd);
+    //         exit(-1);
+    //     }
+    //     close(app.fd);
+    //     exit(-1);
+    // }
+    // count++;
+    // printf("Connection timed out. Retrying...(failed attempt number %d) \n", count);
+    // if (app.status == TRANSMITER)
+    //     write(app.fd, ll.frame, ll.frameSize);
+    // alarm(ll.timeout);
     count++;
-    printf("Connection timed out. Retrying...(failed attempt number %d) \n", count);
-    if (app.status == TRANSMITER)
-        write(app.fd, ll.frame, ll.frameSize);
+    alarmFlag = TRUE;
+    signal(SIGALRM, alarmHandler);
     alarm(ll.timeout);
+    siginterrupt(SIGALRM, 1);
 }
 
 int stuffing(const unsigned char *info, size_t size, unsigned char *stuffed_info)
@@ -155,7 +163,7 @@ int llread(int fd, char *buffer)
     for (int i = 0; state != STOP; i++)
     {
         read(fd, &buffer[i], 1);
-        printf("Receiving FRAME byte %d: %#x\n", i, buffer[i]);
+        printf("Receiving FRAME byte %d: %c\n", i, buffer[i]);
         info_state(buffer[i], &state);
         stuffed_size++;
     }
@@ -200,8 +208,10 @@ int set_termios()
     /* set input mode (non-canonical, no echo,...) */
     newtio.c_lflag = 0;
 
+    //default timer, should be 0 since we implemented our own
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
+    //minimum of chars read, must be at least 1
+    newtio.c_cc[VMIN]     = 1;   
 
     /* 
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
@@ -227,7 +237,7 @@ int llopen(int port, int status)
 
     ll.sequenceNumber = 0;
     ll.frameSize = 5;
-
+    
     switch (port)
     {
     case HOME_PORT_0:
@@ -261,7 +271,6 @@ int llopen(int port, int status)
         // TRANSMITER
 
         // Send SET
-
         int res;
         char set[5];
         signal(SIGALRM, alarmHandler);
@@ -276,13 +285,13 @@ int llopen(int port, int status)
         // Receive UA
 
         states state = START;
-        char result[MAX_SIZE];
+        char result;
 
         for(int i = 0; state != STOP; ++i)
         {
-            res = read(app.fd, &result[i], 1);
-            printf("Receiving UA byte %d: %#x\n", i, result[i]);
-            ua_state(result[i], &state);
+            res = read(app.fd, &result, 1);
+            printf("Receiving UA byte %d: %#x\n", i, result);
+            ua_state(result, &state);
         }
         alarm(0);
     }
@@ -294,13 +303,13 @@ int llopen(int port, int status)
 
         int res;
         states state = START;
-        char result[MAX_SIZE];
+        char result;
 
         for(int i = 0; state != STOP; ++i)
         {
-            res = read(app.fd, &result[i], 1);
-            printf("Receiving SET byte %d: %#x\n", i, result[i]);
-            set_state(result[i], &state);
+            res = read(app.fd, &result, 1);
+            printf("Receiving SET byte %d: %#x\n", i, result);
+            set_state(result, &state);
         }
 
         // Send UA
@@ -318,93 +327,115 @@ int llopen(int port, int status)
     return app.fd;
 }
 
+
 int llclose(int fd)
 {
-
     printf("\nStarting llclose...\n");
     int res;
-    char disc_rcv[5], disc_snd[5], ua[5];
-    states state;
     
+    states state;
 
-    printf("Creating DISCONNECT!\n");
-    create_disc(disc_snd);
-    printf("Creating UA!\n");
-    create_ua(ua);
+    if (app.status != TRANSMITER && app.status != RECEIVER) return -1;
 
     if(app.status == TRANSMITER) //case transmiter
     {   
         // send disc
-
+        printf("Creating DISCONNECT!\n");
+        char disc_snd[5];
+        create_disc(disc_snd);
         printf("Sending DISC ...\n");
-        res = write(app.fd, disc_snd, ll.frameSize);
-           
-        // wait for disc
-        alarm(ll.timeout);
+        res = write(app.fd, disc_snd, 5);
+
+        //receive DISC
+        char disc_rcv;
         state = START;
-        for(int i = 0; state != STOP; ++i)
+        alarm(ll.timeout);
+        for (int i = 0; state != STOP; i++)
         {
-            read(fd, &disc_rcv[i], 1);
-            printf("Receiving DISC byte %d: %#x\n", i, disc_rcv[i]);
-            disc_state(disc_rcv[i], &state);
+            if(alarmFlag && count > ll.numTransmissions)
+            {
+                printf("Max attempts reached, disconnecting\n");
+                return 1;
+            }
+            if(alarmFlag)
+            {
+                printf("Didn't receive DISC, resending DISC\n");
+                res = write(app.fd, disc_snd, 5);
+                alarm(ll.timeout);
+                alarmFlag = FALSE;
+            }
+ 
+            read(app.fd, &disc_rcv, 1);
+            disc_state(disc_rcv, &state);
+            printf("Receiving DISC byte %d: %#x\n", i, disc_rcv);
         }
+        alarm(0);
+        printf("received the whole byte!\n");
 
-        // send ua
-
-        printf("Sending UA ...\n");
-        res = write(app.fd, ua, ll.frameSize);
+         // send ua
+        char ua[5];
+        create_ua(ua);
+        printf("Sent UA\n");
+        res = write(app.fd, ua, 5);
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     printf("Sending UA byte %d: %#x\n", i, ua[i]);
+        // }
     }
     else //case receiver
     {   
-        // wait for disc
+        //receive DISC
+        char disc_rcv;
         state = START;
-        //for(int i = 0; state != STOP; ++i)
-        for(int i = 0; state != STOP; ++i)
+        for (int i = 0; state != STOP; i++)
         {
-            read(fd, &disc_rcv[i], 1);
-            printf("Receiving DISC byte %d: %#x\n", i, disc_rcv[i]);
-            disc_state(disc_rcv[i], &state);
+            read(app.fd, &disc_rcv, 1);
+            disc_state(disc_rcv, &state);
+            printf("Receiving DISC byte %d: %#x\n", i, disc_rcv);
         }
-        
-        // send disc
-        alarm(ll.timeout);
-        printf("Sending DISC ...\n");
-        res = write(app.fd, disc_snd, ll.frameSize);
+        printf("received the whole byte!\n");
 
-        // wait for ua
+
+        // send DISC
+        printf("Creating DISCONNECT!\n");
+        char disc_snd[5];
+        create_disc(disc_snd);
+        printf("Sending DISC ...\n");
+        res = write(app.fd, disc_snd, 5);
+     
+        // receive ua
+        alarm(ll.timeout);
         state = START;
-        for(int i = 0; state != STOP; ++i)
+        char ua;
+        printf("Gonna receive ua\n");
+        state = START;
+        for (int i = 0; state != STOP; i++)
         {
-            read(fd, &ua[i], 1);
-            printf("Receiving UA byte %d: %#x\n", i, ua[i]);
-            ua_state(ua[i], &state);
+            if(alarmFlag && count > ll.numTransmissions)
+            {
+                printf("Max attempts reached, disconnecting\n");
+                return 1;
+            }
+            if(alarmFlag)
+            {
+                printf("Didn't receive DISC, resending DISC\n");
+                res = write(app.fd, disc_snd, 5);
+                alarm(ll.timeout);
+                alarmFlag = FALSE;
+            }
+
+            read(fd, &ua, 1);
+            printf("Receiving UA byte: %#x \n", ua);
+            ua_state(ua, &state);
         }
-        alarm(0);
+        printf("Received ua\n");
+        //alarm(0);
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     printf("Sending DISC byte %d: %#x\n", i, disc_snd[i]);
+        // }
+        //wait for ua
     }
 
     return close(fd);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
