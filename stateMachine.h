@@ -23,12 +23,24 @@ void create_set(char *set);
 
 void create_ua(char *ua);
 
+void create_rr(char *rr);
+
+void create_rej(char *rej);
+
 void create_disc(char *disc);
+
+int create_bcc2(const unsigned char *info, size_t size, unsigned char *bcc2);
 
 void set_state(char byte, states *state);
 
 void ua_state(char byte, states *state);
 
 void disc_state(char byte, states *state);
+
+void create_frame(const unsigned char *info, size_t size);
+
+void supervision_state(char byte, states *state);
+
+void info_state(char byte, states *state);
 
 #endif

@@ -14,7 +14,7 @@ int main(int argc, char** argv)
     int i, sum = 0, speed = 0;
 
     if (argc != 2) {
-      printf("Usage:\n./writer port_number\n");
+      printf("Usage:\n./reader port_number\n");
       exit(1);
     }
 
