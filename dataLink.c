@@ -13,8 +13,8 @@ void alarmHandler()
 {
     count++;
     alarmFlag = TRUE;
-    alarm(ll.timeout); 
     siginterrupt(SIGALRM, 1);
+    printf("ALARM ALARM\n");
 }
 
 int stuffing(const unsigned char *info, size_t size, unsigned char *stuffed_info)
@@ -101,72 +101,162 @@ int llwrite(int fd, char *buffer, int length)
     char result[255];
     int res;
     int rej = 0;
-    create_frame(buffer, length);
-    do
+    char splitBuffer[ll.frameSize];
+    int frameDataSize = ll.frameSize;
+
+    //rounds totalFrames up
+    int totalFrames = length % ll.frameSize == 0 ? length / ll.frameSize : length / ll.frameSize + 1;
+
+    //CONTROL PACKET BEFORE TRANSMISSION
+    char controlPacket[6+strlen(ll.fileName)];
+    //indicate start
+    controlPacket[0] = 2;
+    //indicate its filesize
+    controlPacket[1] = 0;
+    //nr of bytes to show fileSize
+    controlPacket[2] = 1;
+    //actual fileSize
+    controlPacket[3] = length;
+    //indicate its its fileName
+    controlPacket[4] = 1;
+    //nr of bytes to show fileName
+    controlPacket[5] = strlen(ll.fileName);
+    //actual fileName
+    for (int i = 0; i < strlen(ll.fileName); i++)
     {
+        controlPacket[6+i] = ll.fileName[i];
+    }
+
+    write(app.fd, controlPacket, 6 + strlen(ll.fileName));
+
+    //for each frame needed
+    for (int j = 0; j < totalFrames; j++)
+    {
+        strncpy(splitBuffer, buffer + j*frameDataSize, frameDataSize);
+        create_frame(splitBuffer, length);
+        printf("File so far to send: %s\n", splitBuffer);
         printf("Writing frame!\n");
         write(fd, ll.frame, ll.frameSize);
-        alarm(ll.timeout);
 
         states state = START;
+        alarm(ll.timeout);
         for (int i = 0; state != STOP; i++)
         {
             if (res = read(fd, &result[i], 1) == -1)
                 return -1;
-            printf("Receiving CONFIRMATION byte %d: %#x\n", i, result[i]);
+            //printf("Receiving CONFIRMATION byte %d: %#x\n", i, result[i]);
             supervision_state(result[i], &state);
         }
+        alarm(0);
         if (result[3] == C_I(ll.sequenceNumber))
         {
+            printf("Gonna send the next one\n");
             ll.sequenceNumber ^= 1;
             rej = 0;
         }
         else if (result[3] == C_REJ(ll.sequenceNumber))
         {
-            count++;
-            rej = 1;
+            printf("Gonna resend this one\n");
+            j--;
         }
-        alarm(0);
-    } while (rej);
+    }
+    controlPacket[0] = 3;
+    //RESEND CONTROL PACKET
+    write(app.fd, controlPacket, 6 + strlen(ll.fileName));
     return 0;
 }
 
 int llread(int fd, char *buffer)
 {
-    printf("\nStarting llread!\n");
-    int res;
-    int stuffed_size = 0;
-    char result[255];
-    char message[255];
-    states state = START;
-    for (int i = 0; state != STOP; i++)
-    {
-        read(fd, &buffer[i], 1);
-        printf("Receiving FRAME byte %d: %c\n", i, buffer[i]);
-        info_state(buffer[i], &state);
-        stuffed_size++;
-    }
-    int info_size = destuffing(buffer, stuffed_size, result);
+    //RECEIVE CONTROL BYTE
+    ctrl_states ctrlStates = START_CTRL;
+    char bufferCntrl;
+    int fileSize;
+    int bytesForFileName;
 
-    unsigned char bcc = result[4];
-    for (int i = 5; i < info_size - 2; i++)
+    while(ctrlStates != STOP_CTRL)
     {
-        bcc ^= result[i];
+        read(fd, &bufferCntrl, 1);
+        switch(ctrlStates)
+        {
+            case(START_CTRL):
+                if(bufferCntrl == 2)
+                    ctrlStates = T;
+                break;
+            case(T):
+                if(bufferCntrl == 0)
+                    ctrlStates = L;
+                break;
+            case(L):
+                ctrlStates = V;
+                break;
+            case(V):
+                fileSize = bufferCntrl;
+                ctrlStates = T2;
+                break;
+            case(T2):
+                if(bufferCntrl == 1)
+                    ctrlStates = L2;
+                break;
+            case(L2):
+                bytesForFileName = bufferCntrl;
+                for (int i = 0; i < bytesForFileName; i++)
+                {
+                    read(fd, &bufferCntrl, 1);
+                    ll.fileName[i] = bufferCntrl;
+                }
+                ctrlStates = STOP_CTRL;
+                break;
+        }
     }
+    //printf("Received control byte\n");
+    int totalFrames = fileSize % ll.frameSize == 0 ? fileSize / ll.frameSize : fileSize / ll.frameSize + 1;
+    char *finalFile = (char *)malloc(sizeof(char) * fileSize);
+    int bytesWritten = 0;
+    for (int j = 0; j < totalFrames; j++)
+    {
+        printf("\nStarting llread!\n");
+        int res;
+        char result[255];
+        int stuffed_size = 0;
+        char message[5];
+        states state = START;
+        for (int i = 0; state != STOP; i++)
+        {
+            read(fd, &buffer[i], 1);
+            info_state(buffer[i], &state);
+            stuffed_size++;
+        }
+        int info_size = destuffing(buffer, stuffed_size, result);
 
-    if (bcc == result[info_size - 2])
-    {
-        printf("Creating CONFIRMATION\n");
-        create_rr(message);
-        ll.sequenceNumber ^= 1;
-    }
-    else
-    {
-        printf("Creating REJ\n");
-        create_rej(message);
-    }
+        unsigned char bcc = result[4];
+        for (int i = 5; i < info_size - 2; i++)
+        {
+            bcc ^= result[i];
+        }
 
-    write(fd, message, ll.frameSize);
+        memcpy(&finalFile[strlen(finalFile)], result + 4, strlen(result));
+        bytesWritten += strlen(result);
+
+        if (bcc == result[info_size - 2])
+        {
+            printf("Creating CONFIRMATION\n");
+            create_rr(message);
+            ll.sequenceNumber ^= 1;
+        }
+        else
+        {
+            printf("Creating REJ\n");
+            create_rej(message);
+        }
+
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     printf("Sending CONF byte %d: %#x\n", i, message[i]);
+        // }
+        write(fd, message, 5);
+    }
+    memcpy(buffer, finalFile, strlen(finalFile));
     return 0;
 }
 
@@ -288,26 +378,23 @@ int llopen(int port, int status)
         // READER
 
         // Receive SET
-
         int res;
         states state = START;
         char result;
-        alarmFlag = FALSE;
         alarm(ll.timeout);
+        alarmFlag = FALSE;
         for (int i = 0; state != STOP; ++i)
         {
-            if(alarmFlag && count > ll.numTransmissions)
+            if (alarmFlag && count > ll.numTransmissions)
             {
                 printf("Max attempts reached, disconnecting\n");
                 return 1;
             }
             if(alarmFlag)
             {
-                printf("Didn't receive SET, retrying\n");
+                alarmFlag = FALSE;
             }
-
             res = read(app.fd, &result, 1);
-            //printf("Receiving SET byte %d: %#x\n", i, result);
             set_state(result, &state);
         }
         printf("Received SET\n");
@@ -374,32 +461,9 @@ int llclose(int fd)
         create_ua(ua);
         printf("Sent UA\n");
         res = write(app.fd, ua, 5);
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     printf("Sending UA byte %d: %#x\n", i, ua[i]);
-        // }
     }
     else //case receiver
     {   
-
-        //RECEIVE DISC
-        char disc_rcv;
-        state = START;
-        alarm(ll.timeout);
-        for (int i = 0; state != STOP; i++)
-        {
-            if(alarmFlag && count > ll.numTransmissions)
-            {
-                printf("Max attempts reached, disconnecting\n");
-                return 1;
-            }
-            read(app.fd, &disc_rcv, 1);
-            disc_state(disc_rcv, &state);
-            printf("Receiving DISC byte %d: %#x, state: %d\n", i, disc_rcv, state);
-        }
-        alarm(0);
-        printf("received the whole byte!\n");
-
         // sSEND DISC
         printf("Creating DISCONNECT!\n");
         char disc_snd[5];

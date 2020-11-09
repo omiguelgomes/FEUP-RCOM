@@ -47,7 +47,8 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    int fileSize = openFile(buf, argv[2]);
+    strcpy(ll.fileName, argv[2]);
+    int fileSize = openFile(buf, ll.fileName);
 
     if(llopen(app.fd, TRANSMITER)) return 1;
 

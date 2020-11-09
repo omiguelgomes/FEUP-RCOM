@@ -226,6 +226,7 @@ void disc_state(char byte, states *state)
   }
 }
 
+
 void supervision_state(char byte, states *state)
 {
   unsigned char c;

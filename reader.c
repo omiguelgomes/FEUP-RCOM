@@ -9,7 +9,7 @@ linkLayer ll;
 
 int main(int argc, char** argv)
 {
-    char buf[255];
+    char buf[MAX_SIZE];
     char result[MAX_SIZE];
     int i, sum = 0, speed = 0;
 
@@ -49,11 +49,15 @@ int main(int argc, char** argv)
 
     if(llopen(app.fd, RECEIVER)) return 1;
 
+
     if(llread(app.fd, result)) return 1;
 
-    /* 
-    O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
-  */
+    //FILE *file = fopen((char *)ll.fileName, "wb+");
+    FILE *file = fopen("New file", "wb+");
+    fwrite((void *)result, 1, sizeof(result), file);
+    // printf("%zd\n", *sizeFile);
+    // printf("New file created\n");
+    fclose(file);
 
     tcsetattr(app.fd,TCSANOW,&oldtio);
     llclose(app.fd);

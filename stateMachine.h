@@ -16,8 +16,21 @@ typedef enum
     A_OK,
     C_OK,
     BCC_OK,
+    INFO,
     STOP
 }states;
+
+typedef enum
+{
+    START_CTRL,
+    T,
+    L,
+    V,
+    T2,
+    L2, 
+    V2,
+    STOP_CTRL
+}ctrl_states;
 
 void create_set(char *set);
 
