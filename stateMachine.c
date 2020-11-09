@@ -203,25 +203,25 @@ void disc_state(char byte, states *state)
       *state = A_OK;
     }
     else if (byte != FLAG)
-      *state = START;
+      *state = FLAG_OK;
     break;
   case A_OK:
     if (byte == C_DISC)
       *state = C_OK;
     else if (byte != a)
-      *state = START;
+      *state = A_OK;
     break;
   case C_OK:
     if (byte == (BCC(a, C_DISC)))
       *state = BCC_OK;
     else if (byte != C_DISC)
-      *state = START;
+      *state = C_OK;
     break;
   case BCC_OK:
     if (byte == FLAG)
       *state = STOP;
     else
-      *state = START;
+      *state = BCC_OK;
     break;
   }
 }

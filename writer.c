@@ -40,21 +40,29 @@ int main(int argc, char** argv)
       return 1;
     }
 
+    printf("What should the frame size be?\n");
+    if(scanf("%d", &ll.frameSize) != 1)
+    {
+      printf("Invalid number\n");
+      return 1;
+    }
+
     int fileSize = openFile(buf, argv[2]);
 
-    llopen(app.fd, TRANSMITER);
+    if(llopen(app.fd, TRANSMITER)) return 1;
 
-    llwrite(app.fd, buf, fileSize);
-    //llwrite(app.fd, buf, fileSize);
-
+    if(llwrite(app.fd, buf, fileSize)) return 1;
    
     if ( tcsetattr(app.fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
     }
-    llclose(app.fd);
+    if(llclose(app.fd) == 1)
+    {
+      printf("llclose failed\n");
+      return 1;
+    } 
 
     printf("Program executed correctly!\n");
     return 0;
-    //return llclose(fd);
 }

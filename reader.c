@@ -26,16 +26,30 @@ int main(int argc, char** argv)
       exit(1);
     }
 
-    llopen(app.fd, RECEIVER);
-
-    llread(app.fd, result);
-
-    //condition to be replaced to alarm
-    /*while(TRUE)
+    printf("What should the timeout be?\n");
+    if(scanf("%d", &ll.timeout) != 1)
     {
-      if(llread(app.fd, buf) == 1)
-        break;
+      printf("Invalid number\n");
+      return 1;
     }
+
+    printf("What should the max attemps be?\n");
+    if(scanf("%d", &ll.numTransmissions) != 1)
+    {
+      printf("Invalid number\n");
+      return 1;
+    }
+
+    printf("What should the frame size be?\n");
+    if(scanf("%d", &ll.frameSize) != 1)
+    {
+      printf("Invalid number\n");
+      return 1;
+    }
+
+    if(llopen(app.fd, RECEIVER)) return 1;
+
+    if(llread(app.fd, result)) return 1;
 
     /* 
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
