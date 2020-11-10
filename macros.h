@@ -45,6 +45,7 @@ typedef struct {
     char port[20];
     char fileName[255];
     int baudRate;
+    int fileSize;
     unsigned int sequenceNumber;
     unsigned int timeout;
     unsigned int numTransmissions;

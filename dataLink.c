@@ -11,10 +11,11 @@ bool alarmFlag = FALSE;
 
 void alarmHandler()
 {
+    printf("Got an alarm\n");
     count++;
     alarmFlag = TRUE;
+    alarm(ll.timeout);
     siginterrupt(SIGALRM, 1);
-    printf("ALARM ALARM\n");
 }
 
 int stuffing(const unsigned char *info, size_t size, unsigned char *stuffed_info)
@@ -134,7 +135,7 @@ int llwrite(int fd, char *buffer, int length)
     {
         strncpy(splitBuffer, buffer + j*frameDataSize, frameDataSize);
         create_frame(splitBuffer, length);
-        printf("File so far to send: %s\n", splitBuffer);
+        
         printf("Writing frame!\n");
         write(fd, ll.frame, ll.frameSize);
 
@@ -212,6 +213,7 @@ int llread(int fd, char *buffer)
     //printf("Received control byte\n");
     int totalFrames = fileSize % ll.frameSize == 0 ? fileSize / ll.frameSize : fileSize / ll.frameSize + 1;
     char *finalFile = (char *)malloc(sizeof(char) * fileSize);
+    ll.fileSize = fileSize;
     int bytesWritten = 0;
     for (int j = 0; j < totalFrames; j++)
     {
@@ -334,7 +336,6 @@ int llopen(int port, int status)
     set_termios();
     signal(SIGALRM, alarmHandler);
 
-
     if(app.status == TRANSMITER)
     {
 
@@ -344,7 +345,6 @@ int llopen(int port, int status)
         int res;
         char set[5];
         create_set(set);
-        memcpy(ll.frame, set, ll.frameSize);
 
         printf("Sending SET ...\n");
         res = write(app.fd, set, ll.frameSize);
@@ -355,6 +355,9 @@ int llopen(int port, int status)
         alarm(ll.timeout);
         for (int i = 0; state != STOP; ++i)
         {
+            read(app.fd, &result, 1);
+            ua_state(result, &state);
+
             if(alarmFlag && count > ll.numTransmissions)
             {
                 printf("Max attempts reached, disconnecting\n");
@@ -366,9 +369,6 @@ int llopen(int port, int status)
                 res = write(app.fd, set, 5);
                 alarmFlag = FALSE;
             }
- 
-            read(app.fd, &result, 1);
-            ua_state(result, &state);
         }
         alarm(0);
 
@@ -382,9 +382,10 @@ int llopen(int port, int status)
         states state = START;
         char result;
         alarm(ll.timeout);
-        alarmFlag = FALSE;
         for (int i = 0; state != STOP; ++i)
         {
+            res = read(app.fd, &result, 1);
+            set_state(result, &state);
             if (alarmFlag && count > ll.numTransmissions)
             {
                 printf("Max attempts reached, disconnecting\n");
@@ -394,8 +395,6 @@ int llopen(int port, int status)
             {
                 alarmFlag = FALSE;
             }
-            res = read(app.fd, &result, 1);
-            set_state(result, &state);
         }
         printf("Received SET\n");
         alarm(0);
@@ -405,7 +404,6 @@ int llopen(int port, int status)
         create_ua(ua);
         printf("Sending UA ...\n");
         res = write(app.fd, ua, ll.frameSize);
-
     }
 
     printf("llopen executed correctly\n");
@@ -470,11 +468,7 @@ int llclose(int fd)
         create_disc(disc_snd);
         printf("Sending DISC ...\n");
         res = write(app.fd, disc_snd, 5);
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     printf("Sending DISC byte %d: %#x\n", i, disc_snd[i]);
-        // }
-     
+
         // RECEIVE UA
         alarm(ll.timeout);
         state = START;
@@ -496,7 +490,6 @@ int llclose(int fd)
             }
 
             read(fd, &ua, 1);
-            //printf("Receiving UA byte: %#x \n", ua);
             ua_state(ua, &state);
         }
         alarm(0);

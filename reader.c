@@ -53,8 +53,8 @@ int main(int argc, char** argv)
     if(llread(app.fd, result)) return 1;
 
     //FILE *file = fopen((char *)ll.fileName, "wb+");
-    FILE *file = fopen("New file", "wb+");
-    fwrite((void *)result, 1, sizeof(result), file);
+    FILE *file = fopen("New_file.txt", "wb+");
+    fwrite((void *)result, 1, ll.fileSize, file);
     // printf("%zd\n", *sizeFile);
     // printf("New file created\n");
     fclose(file);
