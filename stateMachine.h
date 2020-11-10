@@ -16,7 +16,6 @@ typedef enum
     A_OK,
     C_OK,
     BCC_OK,
-    INFO,
     STOP
 }states;
 

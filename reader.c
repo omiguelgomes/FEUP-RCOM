@@ -9,8 +9,8 @@ linkLayer ll;
 
 int main(int argc, char** argv)
 {
-    char buf[MAX_SIZE];
-    char result[MAX_SIZE];
+    char buf[30000];
+    char result[30000];
     int i, sum = 0, speed = 0;
 
     if (argc != 2) {
@@ -52,15 +52,15 @@ int main(int argc, char** argv)
 
     if(llread(app.fd, result)) return 1;
 
-    //FILE *file = fopen((char *)ll.fileName, "wb+");
-    FILE *file = fopen("New_file.txt", "wb+");
-    fwrite((void *)result, 1, ll.fileSize, file);
+    llclose(app.fd);
+
+    FILE *file = fopen("olaaaa.txt", "w");
+    fwrite((void *)result, ll.fileSize, 1, file);
     // printf("%zd\n", *sizeFile);
     // printf("New file created\n");
     fclose(file);
 
     tcsetattr(app.fd,TCSANOW,&oldtio);
-    llclose(app.fd);
     printf("Program executed correctly!\n");
     return 0;
 }

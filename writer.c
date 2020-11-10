@@ -10,7 +10,7 @@ linkLayer ll;
 int main(int argc, char** argv)
 {
 
-    char buf[255];
+    char buf[30000];
     int i, sum = 0, speed = 0;
 
     if (argc != 3) {

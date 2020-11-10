@@ -89,7 +89,11 @@ int openFile(char *buffer, char *fileName)
     lSize = ftell( fp );
     rewind( fp );
 
-    c = fgets(buffer, MAX_SIZE, fp);
+    
+    for (int i = 0; i < lSize; i++)
+    {
+        buffer[i] = fgetc(fp);
+    }
 
     fclose(fp);
 
@@ -107,63 +111,71 @@ int llwrite(int fd, char *buffer, int length)
 
     //rounds totalFrames up
     int totalFrames = length % ll.frameSize == 0 ? length / ll.frameSize : length / ll.frameSize + 1;
-
+    
+    int bytesNeeded = sizeof(length);
     //CONTROL PACKET BEFORE TRANSMISSION
-    char controlPacket[6+strlen(ll.fileName)];
+    unsigned char controlPacket[5+strlen(ll.fileName)+bytesNeeded];
     //indicate start
     controlPacket[0] = 2;
     //indicate its filesize
     controlPacket[1] = 0;
+
     //nr of bytes to show fileSize
-    controlPacket[2] = 1;
+    controlPacket[2] = bytesNeeded;
     //actual fileSize
-    controlPacket[3] = length;
+    for (int i = 0; i < bytesNeeded; i++)
+    {
+        controlPacket[3 + i] = (length >> (8 * i))& 0xff;
+    }
+    
     //indicate its its fileName
-    controlPacket[4] = 1;
+    controlPacket[3+bytesNeeded] = 1;
     //nr of bytes to show fileName
-    controlPacket[5] = strlen(ll.fileName);
+    controlPacket[4+bytesNeeded] = strlen(ll.fileName);
     //actual fileName
     for (int i = 0; i < strlen(ll.fileName); i++)
     {
-        controlPacket[6+i] = ll.fileName[i];
+        controlPacket[5+bytesNeeded+i] = ll.fileName[i];
     }
 
-    write(app.fd, controlPacket, 6 + strlen(ll.fileName));
+    write(app.fd, controlPacket, 5 + strlen(ll.fileName)+bytesNeeded);
 
     //for each frame needed
     for (int j = 0; j < totalFrames; j++)
     {
         strncpy(splitBuffer, buffer + j*frameDataSize, frameDataSize);
-        create_frame(splitBuffer, length);
+        create_frame(splitBuffer, frameDataSize);
         
-        printf("Writing frame!\n");
         write(fd, ll.frame, ll.frameSize);
 
-        states state = START;
-        alarm(ll.timeout);
-        for (int i = 0; state != STOP; i++)
-        {
-            if (res = read(fd, &result[i], 1) == -1)
-                return -1;
-            //printf("Receiving CONFIRMATION byte %d: %#x\n", i, result[i]);
-            supervision_state(result[i], &state);
-        }
+        // states state = START;
+        // alarm(ll.timeout);
+        // for (int i = 0; state != STOP; i++)
+        // {
+        //     read(fd, &result[i], 1);
+        //     supervision_state(result[i], &state);
+        //     //printf("result %d: %d\n", i, result[i]);
+        //     if(state == 3)
+        //     {
+        //         if (result[i] == C_I(ll.sequenceNumber))
+        //         {
+        //             printf("Gonna send the next one\n");
+        //             ll.sequenceNumber++;
+        //             rej = 0;
+        //         }
+        //         else if (result[i] == C_REJ(ll.sequenceNumber))
+        //         {
+        //             printf("Gonna resend this one\n");
+        //             j--;
+        //         }
+        //     }
+        // }
         alarm(0);
-        if (result[3] == C_I(ll.sequenceNumber))
-        {
-            printf("Gonna send the next one\n");
-            ll.sequenceNumber ^= 1;
-            rej = 0;
-        }
-        else if (result[3] == C_REJ(ll.sequenceNumber))
-        {
-            printf("Gonna resend this one\n");
-            j--;
-        }
     }
-    controlPacket[0] = 3;
+
     //RESEND CONTROL PACKET
-    write(app.fd, controlPacket, 6 + strlen(ll.fileName));
+    controlPacket[0] = 3;
+    write(app.fd, controlPacket, 5 + strlen(ll.fileName+bytesNeeded));
     return 0;
 }
 
@@ -171,9 +183,10 @@ int llread(int fd, char *buffer)
 {
     //RECEIVE CONTROL BYTE
     ctrl_states ctrlStates = START_CTRL;
-    char bufferCntrl;
-    int fileSize;
+    unsigned char bufferCntrl;
+    unsigned int fileSize = 0;
     int bytesForFileName;
+    int bytesForSize;
 
     while(ctrlStates != STOP_CTRL)
     {
@@ -186,14 +199,18 @@ int llread(int fd, char *buffer)
                 break;
             case(T):
                 if(bufferCntrl == 0)
+                {
                     ctrlStates = L;
+                }
                 break;
             case(L):
-                ctrlStates = V;
-                break;
-            case(V):
-                fileSize = bufferCntrl;
-                ctrlStates = T2;
+                bytesForSize = bufferCntrl;
+                for (int i = 0; i < bytesForSize; i++)
+                {
+                    read(fd, &bufferCntrl, 1);
+                    fileSize += (bufferCntrl << (8 * i));
+                }
+                    ctrlStates = T2;
                 break;
             case(T2):
                 if(bufferCntrl == 1)
@@ -219,44 +236,44 @@ int llread(int fd, char *buffer)
     {
         printf("\nStarting llread!\n");
         int res;
-        char result[255];
+        char result[ll.frameSize];
         int stuffed_size = 0;
         char message[5];
         states state = START;
+        unsigned char bcc;
         for (int i = 0; state != STOP; i++)
-        {
+        {  
             read(fd, &buffer[i], 1);
             info_state(buffer[i], &state);
-            stuffed_size++;
+            if(state == BCC_OK)
+            {
+                bcc = buffer[i];
+            }
+            stuffed_size++;   
         }
+
         int info_size = destuffing(buffer, stuffed_size, result);
 
-        unsigned char bcc = result[4];
         for (int i = 5; i < info_size - 2; i++)
         {
             bcc ^= result[i];
         }
 
-        memcpy(&finalFile[strlen(finalFile)], result + 4, strlen(result));
-        bytesWritten += strlen(result);
+        memcpy(&finalFile[strlen(finalFile)], result + 4, ll.frameSize);
+        bytesWritten += info_size;
 
-        if (bcc == result[info_size - 2])
-        {
-            printf("Creating CONFIRMATION\n");
-            create_rr(message);
-            ll.sequenceNumber ^= 1;
-        }
-        else
-        {
-            printf("Creating REJ\n");
-            create_rej(message);
-        }
-
-        // for (int i = 0; i < 5; i++)
+        // if (bcc == result[info_size - 2])
         // {
-        //     printf("Sending CONF byte %d: %#x\n", i, message[i]);
+        //     printf("Creating CONFIRMATION\n");
+        //     create_rr(message);
+        //     ll.sequenceNumber++;
         // }
-        write(fd, message, 5);
+        // else
+        // {
+        //     printf("Creating REJ\n");
+        //     create_rej(message);
+        // }
+        // write(fd, message, 5);
     }
     memcpy(buffer, finalFile, strlen(finalFile));
     return 0;
