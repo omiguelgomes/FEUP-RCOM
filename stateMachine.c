@@ -79,9 +79,10 @@ int create_bcc2(const unsigned char *info, size_t size, unsigned char *bcc2)
 
 void create_frame(const unsigned char *info, size_t size)
 {
-
+    char temp[255];
+    memcpy(&temp, info, size);
     char stuffed_info[size * 2];
-    int stuffed_size = stuffing(info, size, stuffed_info);
+    int stuffed_size = stuffing(info+4, size, stuffed_info);
 
     char bcc2[2];
     int bcc2_i = 4 + stuffed_size;
@@ -90,19 +91,24 @@ void create_frame(const unsigned char *info, size_t size)
     char frame[4 + stuffed_size + bcc2_size + 1];
     frame[0] = FLAG;
     frame[1] = A_SND;
-    frame[2] = C_I(ll.sequenceNumber);
-    frame[3] = BCC(A_SND, C_I(ll.sequenceNumber));
+    frame[2] = C_SND;
+    frame[3] = BCC(A_SND, C_SND);
+
+    for(int i = 0; i < 4; i++)
+    {
+        frame[4+i] = info[i];
+    }
 
     for (int i = 0; i < stuffed_size; i++)
-        frame[4 + i] = stuffed_info[i];
+        frame[8 + i] = stuffed_info[i];
 
-    frame[4 + stuffed_size] = bcc2[0];
+    frame[8 + stuffed_size] = bcc2[0];
     if (bcc2_size == 2)
-        frame[4 + stuffed_size + 1] = bcc2[1];
+        frame[8 + stuffed_size + 1] = bcc2[1];
     
-    frame[4 + stuffed_size + bcc2_size] = FLAG;
+    frame[8 + stuffed_size + bcc2_size] = FLAG;
 
-    ll.frameSize = 4 + stuffed_size + bcc2_size + 1;
+    ll.frameSize = 8 + stuffed_size + bcc2_size + 1;
     memcpy(ll.frame, frame, ll.frameSize);
 }
 
@@ -279,31 +285,23 @@ void info_state(char byte, states *state)
   case FLAG_OK:
     if (byte == A_SND)
       *state = A_OK;
-    else if (byte != FLAG)
-      *state = START;
     break;
   case A_OK:
-    if (byte == C_I(ll.sequenceNumber))
+    if (byte == C_SND)
     {
       *state = C_OK;
-      c = byte;
     }
-    else if (byte != A_SND)
-      *state = START;
     break;
   case C_OK:
-    if (byte == BCC(A_SND, c))
+      //if(TRUE)
+    if (byte == BCC(A_SND, C_SND))
       *state = BCC_OK;
-    else if (byte != c)
-      *state = START;
     break;
   case BCC_OK:
     if (byte == FLAG)
       *state = STOP;
-    else
-      *state = BCC_OK;
-
     break;
   }
+
 }
 

@@ -13,13 +13,14 @@ int main(int argc, char** argv)
     char buf[30000];
     int i, sum = 0, speed = 0;
 
-    if (argc != 3) {
-      printf("Usage:\n./writer port_number file\n");
-      exit(1);
-    }
+//    if (argc != 3) {
+//      printf("Usage:\n./writer port_number file\n");
+//      exit(1);
+//    }
 
 
-    app.fd = atoi(argv[1]);
+    //app.fd = atoi(argv[1]);
+    app.fd =11;
 
     if(app.fd != 0 && app.fd != 1 && app.fd != 10 && app.fd != 11){
       printf("Port number must be {0, 1, 10, 11}\n");
@@ -46,9 +47,14 @@ int main(int argc, char** argv)
       printf("Invalid number\n");
       return 1;
     }
-
-    strcpy(ll.fileName, argv[2]);
-    int fileSize = openFile(buf, ll.fileName);
+//    char cwd[255];
+//    getcwd(cwd, sizeof(cwd));
+//    printf(cwd);
+    //strcpy(ll.fileName, "pinguim2.gif");
+    strcpy(ll.fileName, "ola2.txt");
+    //strcpy(ll.fileName, "test.png");
+    //strcpy(ll.fileName, argv[2]);
+    int fileSize = openFile(buf, "/home/omiguelgomes/Desktop/FEUP/20-21/RCOM/Project/cmake-build-debug/ola2.txt");
 
     if(llopen(app.fd, TRANSMITER)) return 1;
 
