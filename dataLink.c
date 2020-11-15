@@ -174,40 +174,39 @@ int llwrite(int fd, char *buffer, int length)
 
         create_frame(dataPacket, bytes_to_send+4);
         write(fd, ll.frame, ll.frameSize);
-        ll.sequenceNumber++;
         bool leaveLoop = FALSE;
         //RECEIVE CONFIRMATION
-//        states state = START;
-//        while(!leaveLoop && state != STOP)
-//        {
-//             alarm(ll.timeout);
-//
-//             read(fd, conf, 1);
-//             supervision_state(conf, &state);
-//
-//             if(state == 3)
-//             {
-//                 if (conf == C_I(ll.sequenceNumber))
-//                 {
-//                     printf("Gonna send the next one\n");
-//                     ll.sequenceNumber++;
-//                     leaveLoop = TRUE;
-//                 }
-//                 else if (conf == C_REJ(ll.sequenceNumber))
-//                 {
-//                     printf("Gonna resend this one\n");
-//                     write(fd, ll.frame, ll.frameSize);
-//                     leaveLoop = TRUE;
-//                 }
-//             }
+        states state = START;
+        while(!leaveLoop && state != STOP)
+        {
+             //alarm(ll.timeout);
+
+             read(app.fd, &conf, 1);
+             supervision_state(conf, &state);
+
+             if(state == 3)
+             {
+                 if (conf == C_RCV)
+                 {
+                     printf("Gonna send the next one\n");
+                     ll.sequenceNumber++;
+                     leaveLoop = TRUE;
+                 }
+                 else
+                 {
+                     printf("Gonna resend this one\n");
+                     write(fd, ll.frame, ll.frameSize);
+                     leaveLoop = TRUE;
+                 }
+             }
 //            if(alarmFlag)
 //            {
 //                write(fd, ll.frame, ll.frameSize);
 //                alarmFlag = FALSE;
 //                leaveLoop = TRUE;
 //            }
-//            alarm(0);
-//        }
+            //alarm(0);
+        }
     }
 
     //RESEND CONTROL PACKET
@@ -380,11 +379,11 @@ int llread(int fd, char *buffer)
         {
             bcc ^= result[i];
         }
-
+        printf("Gonna send confirmation!\n");
         message[0] = FLAG;
         message[1] = A_RCV;
-        message[2] = C_RR(ll.sequenceNumber);
-        message[3] = BCC(A_RCV, C_RR(ll.sequenceNumber));
+        message[2] = C_RCV;
+        message[3] = BCC(A_RCV, C_RCV);
         message[4] = FLAG;
         write(app.fd, message, 5);
 

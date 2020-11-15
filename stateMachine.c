@@ -249,7 +249,7 @@ void supervision_state(char byte, states *state)
       *state = START;
     break;
   case A_OK:
-    if (byte == C_RR(ll.sequenceNumber) || byte == C_REJ(ll.sequenceNumber))
+    if (byte == C_RCV)
     {
       *state = C_OK;
       c = byte;
