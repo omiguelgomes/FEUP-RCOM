@@ -137,7 +137,6 @@ int llwrite(int fd, char *buffer, int length)
         controlPacket[5+bytesNeeded+i] = ll.fileName[i];
     }
 
-
     write(app.fd, controlPacket, 5 + strlen(ll.fileName)+bytesNeeded);
 
     // Get the file name
@@ -179,7 +178,7 @@ int llwrite(int fd, char *buffer, int length)
         states state = START;
         while(!leaveLoop && state != STOP)
         {
-             //alarm(ll.timeout);
+             alarm(ll.timeout);
 
              read(app.fd, &conf, 1);
              supervision_state(conf, &state);
@@ -199,13 +198,13 @@ int llwrite(int fd, char *buffer, int length)
                      leaveLoop = TRUE;
                  }
              }
-//            if(alarmFlag)
-//            {
-//                write(fd, ll.frame, ll.frameSize);
-//                alarmFlag = FALSE;
-//                leaveLoop = TRUE;
-//            }
-            //alarm(0);
+            if(alarmFlag)
+            {
+                write(fd, ll.frame, ll.frameSize);
+                alarmFlag = FALSE;
+                leaveLoop = TRUE;
+            }
+            alarm(0);
         }
     }
 
@@ -291,24 +290,24 @@ int llread(int fd, char *buffer)
         {
             read(app.fd,&bufferTemp, 1);
             info_state(bufferTemp, &state);
-//            if(alarmFlag)
-//            {
-//                message[0] = FLAG;
-//                message[1] = A_RCV;
-//                message[2] = C_REJ(ll.sequenceNumber);
-//                message[3] = BCC(A_RCV, C_REJ(ll.sequenceNumber));
-//                message[4] = FLAG;
-//                write(app.fd, message, 5);
-//                break;
-//                //message resend
-//            }
+            if(alarmFlag)
+            {
+                message[0] = FLAG;
+                message[1] = A_RCV;
+                message[2] = C_REJ(ll.sequenceNumber);
+                message[3] = BCC(A_RCV, C_REJ(ll.sequenceNumber));
+                message[4] = FLAG;
+                write(app.fd, message, 5);
+                break;
+                //message resend
+            }
         }
-//        if(alarmFlag)
-//        {
-//            continue;
-//        }
-//        alarm(0);
-//        alarm(ll.timeout);
+        if(alarmFlag)
+        {
+            continue;
+        }
+        alarm(0);
+        alarm(ll.timeout);
 
         data_packet_states dp_state = START_DP;
         //receive actual data packet
@@ -339,39 +338,39 @@ int llread(int fd, char *buffer)
                     bytes_read++;
                     break;
             }
-//            if(alarmFlag)
-//            {
-//                message[0] = FLAG;
-//                message[1] = A_RCV;
-//                message[2] = C_REJ(ll.sequenceNumber);
-//                message[3] = BCC(A_RCV, C_REJ(ll.sequenceNumber));
-//                message[4] = FLAG;
-//                write(app.fd, message, 5);
-//                break;
-//            }
+            if(alarmFlag)
+            {
+                message[0] = FLAG;
+                message[1] = A_RCV;
+                message[2] = C_REJ(ll.sequenceNumber);
+                message[3] = BCC(A_RCV, C_REJ(ll.sequenceNumber));
+                message[4] = FLAG;
+                write(app.fd, message, 5);
+                break;
+            }
         }
 
 
         dp_state = START_DP;
         int info_size = destuffing(bufferInfo, bytes_read, result);
 
-//        while(state != STOP)
-//        {
-//            read(app.fd,&bufferTemp, 1);
-//            info_state(bufferTemp, &state);
-////            if(alarmFlag)
-////            {
-////                message[0] = FLAG;
-////                message[1] = A_RCV;
-////                message[2] = C_REJ(ll.sequenceNumber);
-////                message[3] = BCC(A_RCV, C_REJ(ll.sequenceNumber));
-////                message[4] = FLAG;
-////                write(app.fd, message, 5);
-////                alarmFlag = FALSE;
-////                break;
-////            }
-//        }
-        //alarm(0);
+        while(state != STOP)
+        {
+            read(app.fd,&bufferTemp, 1);
+            info_state(bufferTemp, &state);
+            if(alarmFlag)
+            {
+                message[0] = FLAG;
+                message[1] = A_RCV;
+                message[2] = C_REJ(ll.sequenceNumber);
+                message[3] = BCC(A_RCV, C_REJ(ll.sequenceNumber));
+                message[4] = FLAG;
+                write(app.fd, message, 5);
+                alarmFlag = FALSE;
+                break;
+            }
+        }
+        alarm(0);
 
         state = START;
 
