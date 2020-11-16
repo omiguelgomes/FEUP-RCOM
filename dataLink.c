@@ -476,6 +476,7 @@ int llopen(int port, int status)
 
     set_termios();
     signal(SIGALRM, alarmHandler);
+    alarm(ll.timeout);
 
     if(app.status == TRANSMITER)
     {
@@ -541,7 +542,7 @@ int llopen(int port, int status)
         printf("Sending UA ...\n");
         res = write(app.fd, ua, 5);
     }
-
+    alarm(0);
     printf("llopen executed correctly\n");
 
     return 0;

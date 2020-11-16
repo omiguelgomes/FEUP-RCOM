@@ -9,9 +9,7 @@ linkLayer ll;
 
 int main(int argc, char** argv)
 {
-    // Calculate the time taken by the transfer
-    clock_t t;
-    t = clock();
+
 
     char buf[30000];
     int i, sum = 0, speed = 0;
@@ -66,6 +64,10 @@ int main(int argc, char** argv)
     //strcpy(ll.fileName, argv[2]);
     int fileSize = openFile(buf, "/home/omiguelgomes/Desktop/FEUP/20-21/RCOM/Project/cmake-build-debug/pinguim2.gif");
 
+    // Calculate the time taken by the transfer
+    clock_t t;
+    t = clock();
+
     if(llopen(app.fd, TRANSMITER)) return 1;
 
     if(llwrite(app.fd, buf, fileSize)) return 1;
@@ -82,7 +84,7 @@ int main(int argc, char** argv)
 
     t = clock() - t;
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // calculate the elapsed time
-    printf("The program took %f seconds to execute\n", time_taken);
+    printf("The transfer took %f seconds to execute\n", time_taken);
     printf("The transfer rate was %f kBytes/second\n", (fileSize/8)/(time_taken*1000));
     return 0;
 }
