@@ -13,14 +13,13 @@ int main(int argc, char** argv)
     char result[30000];
     int i, sum = 0, speed = 0;
 
-//    if (argc != 2) {
-//      printf("Usage:\n./reader port_number\n");
-//      exit(1);
-//    }
+   if (argc != 2) {
+     printf("Usage:\n./reader port_number\n");
+     exit(1);
+   }
 
 
-    //app.fd = atoi(argv[1]);
-    app.fd = 10;
+    app.fd = atoi(argv[1]);
 
     if(app.fd != 0 && app.fd != 1 && app.fd != 10 && app.fd != 11){
       printf("Port number must be {0, 1, 10, 11}\n");

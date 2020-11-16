@@ -231,7 +231,6 @@ int llread(int fd, char *buffer)
     int bytesForFileName;
     int bytesForSize;
     FILE *file = fopen("pinguim-novo.gif", "wb+");
-    //FILE *file = fopen("ola-novo.txt", "wb+");
 
     while(ctrlStates != STOP_CTRL)
     {
