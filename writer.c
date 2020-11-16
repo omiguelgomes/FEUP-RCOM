@@ -9,6 +9,9 @@ linkLayer ll;
 
 int main(int argc, char** argv)
 {
+    // Calculate the time taken by the transfer
+    clock_t t;
+    t = clock();
 
     char buf[30000];
     int i, sum = 0, speed = 0;
@@ -47,6 +50,13 @@ int main(int argc, char** argv)
       printf("Invalid number\n");
       return 1;
     }
+
+//    printf("What should the baudrate be?\n");
+//    if(scanf("%d", BAUDRATE) != 1)
+//    {
+//        printf("Invalid number\n");
+//        return 1;
+//    }
 //    char cwd[255];
 //    getcwd(cwd, sizeof(cwd));
 //    printf(cwd);
@@ -70,6 +80,9 @@ int main(int argc, char** argv)
       return 1;
     } 
 
-    printf("Program executed correctly!\n");
+    t = clock() - t;
+    double time_taken = ((double)t)/CLOCKS_PER_SEC; // calculate the elapsed time
+    printf("The program took %f seconds to execute\n", time_taken);
+    printf("The transfer rate was %f kBytes/second\n", (fileSize/8)/(time_taken*1000));
     return 0;
 }

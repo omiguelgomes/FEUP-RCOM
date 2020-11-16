@@ -47,6 +47,13 @@ int main(int argc, char** argv)
       printf("Invalid number\n");
       return 1;
     }
+//
+//    printf("What should the baudrate be?\n");
+//    if(scanf("%d", BAUDRATE) != 1)
+//    {
+//        printf("Invalid number\n");
+//        return 1;
+//    }
 
     if(llopen(app.fd, RECEIVER)) return 1;
 
