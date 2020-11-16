@@ -32,8 +32,8 @@
 
 #define ESC             0x7D
 #define MASK            0x20
-#define MASKED_FLAG     (FLAG^MASK)
-#define MASKED_ESC      (ESC^MASK)
+#define MASKED_FLAG     0x5E
+#define MASKED_ESC      0x5D
 
 typedef struct
 {
@@ -50,7 +50,7 @@ typedef struct {
     unsigned int timeout;
     unsigned int numTransmissions;
     unsigned int frameSize;
-    char frame[MAX_SIZE];
+    unsigned char frame[MAX_SIZE];
 } linkLayer;
 
 #endif

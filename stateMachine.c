@@ -54,10 +54,11 @@ int create_bcc2(const unsigned char *info, size_t size, unsigned char *bcc2)
 {
     bcc2[0] = info[0];
 
-    for (int i = 1; i < size; i++)
-    {
-        bcc2[0] ^= info[i];
-    }
+//    for (int i = 1; i < size; i++)
+//    {
+//        bcc2[0] ^= info[i];
+//    }
+    bcc2[0] = BCC(A_SND, C_SND);
 
     if (bcc2[0] == FLAG)
     {
@@ -77,12 +78,13 @@ int create_bcc2(const unsigned char *info, size_t size, unsigned char *bcc2)
         return 1;
 }
 
-void create_frame(const unsigned char *info, size_t size)
+int create_frame(const unsigned char *info, size_t size)
 {
     char temp[255];
     memcpy(&temp, info, size);
     char stuffed_info[size * 2];
     int stuffed_size = stuffing(info+4, size, stuffed_info);
+
 
     char bcc2[2];
     int bcc2_i = 4 + stuffed_size;
@@ -94,10 +96,12 @@ void create_frame(const unsigned char *info, size_t size)
     frame[2] = C_SND;
     frame[3] = BCC(A_SND, C_SND);
 
-    for(int i = 0; i < 4; i++)
-    {
-        frame[4+i] = info[i];
-    }
+
+    frame[4] = info[0];
+    frame[5] = info[1];
+
+    frame[6] = (stuffed_size / 256);
+    frame[7] = (stuffed_size % 256);
 
     for (int i = 0; i < stuffed_size; i++)
         frame[8 + i] = stuffed_info[i];
@@ -110,6 +114,7 @@ void create_frame(const unsigned char *info, size_t size)
 
     ll.frameSize = 8 + stuffed_size + bcc2_size + 1;
     memcpy(ll.frame, frame, ll.frameSize);
+    return stuffed_size;
 }
 
 void set_state(char byte, states *state)
@@ -293,7 +298,6 @@ void info_state(char byte, states *state)
     }
     break;
   case C_OK:
-      //if(TRUE)
     if (byte == BCC(A_SND, C_SND))
       *state = BCC_OK;
     break;

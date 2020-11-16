@@ -20,9 +20,6 @@ void alarmHandler()
 
 int stuffing(const unsigned char *info, size_t size, unsigned char *stuffed_info)
 {
-    char tempInfo[255];
-    memcpy(&tempInfo, info, 20);
-    char tempStuffed[255];
     int i, j;
     for (i = 0, j = 0; i < size; i++, j++)
     {
@@ -42,7 +39,6 @@ int stuffing(const unsigned char *info, size_t size, unsigned char *stuffed_info
             stuffed_info[j] = info[i];
             break;
         }
-        memcpy(&tempStuffed, stuffed_info, 20);
     }
 
     if (info == NULL || stuffed_info == NULL)
@@ -56,20 +52,19 @@ int destuffing(const unsigned char *stuffed_info, size_t size, unsigned char *in
     int i, j;
     for (i = 0, j = 0; j < size; i++, j++)
     {
-        if (stuffed_info[j] == ESC)
+        if (stuffed_info[j] == ESC) {
             switch (stuffed_info[j + 1])
             {
-            case MASKED_ESC:
-                info[i] = ESC;
-                j++;
-                break;
-            case MASKED_FLAG:
-                info[i] = FLAG;
-                j++;
-                break;
-            default:
-                break;
+                case MASKED_ESC:
+                    info[i] = ESC;
+                    j++;
+                    break;
+                case MASKED_FLAG:
+                    info[i] = FLAG;
+                    j++;
+                    break;
             }
+        }
         else
             info[i] = stuffed_info[j];
     }
@@ -161,8 +156,11 @@ int llwrite(int fd, char *buffer, int length)
     unsigned char buf[255];
     unsigned char conf;
     unsigned bytes_to_send;
+    unsigned int bytesSent = 0;
+    unsigned int bytesAddedInStuffing = 0;
     unsigned progress = 0;
     while ((bytes_to_send = read(file_fd, buf, frameDataSize)) > 0) {
+        bytesSent += bytes_to_send;
 
         unsigned char dataPacket[255];
         dataPacket[0] = 1;
@@ -171,8 +169,14 @@ int llwrite(int fd, char *buffer, int length)
         dataPacket[3] = (bytes_to_send % 256);
         memcpy(&dataPacket[4], buf, bytes_to_send);
 
-        create_frame(dataPacket, bytes_to_send+4);
-        write(fd, ll.frame, ll.frameSize);
+        bytesAddedInStuffing = create_frame(dataPacket, bytes_to_send) - bytes_to_send;
+        bytes_to_send += bytesAddedInStuffing;
+
+        write(fd, ll.frame, ll.frameSize+bytesAddedInStuffing);
+        //printf("I've sent %d bytes so far!\n", bytesSent);
+//        printf("This trama is %d bytes long!\n", bytes_to_send);
+//        printf("I've written %d bytes this time\n", bytes_to_send-bytesAddedInStuffing);
+//        printf("I've written %d bytes so far\n", bytesSent);
         bool leaveLoop = FALSE;
         //RECEIVE CONFIRMATION
         states state = START;
@@ -187,7 +191,7 @@ int llwrite(int fd, char *buffer, int length)
              {
                  if (conf == C_RCV)
                  {
-                     printf("Gonna send the next one\n");
+                     //printf("Gonna send the next one\n");
                      ll.sequenceNumber++;
                      leaveLoop = TRUE;
                  }
@@ -222,12 +226,12 @@ int llread(int fd, char *buffer)
     unsigned char bufferCntrl;
     unsigned char bufferTemp;
     unsigned char messsage[5];
-    unsigned char bufferInfo[255];
+    unsigned char bufferInfo[512];
     unsigned int fileSize = 0;
     int bytesForFileName;
     int bytesForSize;
-    //FILE *file = fopen("pinguim-novo.gif", "wb+");
-    FILE *file = fopen("ola-novo.txt", "wb+");
+    FILE *file = fopen("pinguim-novo.gif", "wb+");
+    //FILE *file = fopen("ola-novo.txt", "wb+");
 
     while(ctrlStates != STOP_CTRL)
     {
@@ -331,6 +335,7 @@ int llread(int fd, char *buffer)
                     break;
                 case L1_DP:
                     currentTramaDataSize = temp + (int)bufferTemp;
+                    //printf("This trama is %d bytes long\n", currentTramaDataSize);
                     dp_state=P_DP;
                     break;
                 case P_DP:
@@ -378,7 +383,6 @@ int llread(int fd, char *buffer)
         {
             bcc ^= result[i];
         }
-        printf("Gonna send confirmation!\n");
         message[0] = FLAG;
         message[1] = A_RCV;
         message[2] = C_RCV;
@@ -387,8 +391,13 @@ int llread(int fd, char *buffer)
         write(app.fd, message, 5);
 
         fwrite(result,info_size, 1, file);
+        //printf("Wrote to file\n");
         bytesWritten += info_size;
         ll.sequenceNumber++;
+
+//        printf("I've written %d bytes this time!\n", info_size);
+//        printf("I've written %d bytes so far!\n", bytesWritten);
+
     }
     fclose(file);
     return 0;
@@ -579,7 +588,7 @@ int llclose(int fd)
             disc_state(disc_rcv, &state);
         }
         alarm(0);
-        printf("received the whole byte!\n");
+
 
         // SEND UA
         unsigned char ua[5];

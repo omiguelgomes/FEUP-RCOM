@@ -60,11 +60,11 @@ int main(int argc, char** argv)
 //    char cwd[255];
 //    getcwd(cwd, sizeof(cwd));
 //    printf(cwd);
-    //strcpy(ll.fileName, "pinguim2.gif");
-    strcpy(ll.fileName, "ola2.txt");
+    strcpy(ll.fileName, "pinguim2.gif");
+    //strcpy(ll.fileName, "ola-2.txt");
     //strcpy(ll.fileName, "test.png");
     //strcpy(ll.fileName, argv[2]);
-    int fileSize = openFile(buf, "/home/omiguelgomes/Desktop/FEUP/20-21/RCOM/Project/cmake-build-debug/ola2.txt");
+    int fileSize = openFile(buf, "/home/omiguelgomes/Desktop/FEUP/20-21/RCOM/Project/cmake-build-debug/pinguim2.gif");
 
     if(llopen(app.fd, TRANSMITER)) return 1;
 

@@ -15,6 +15,7 @@
 #include "dataLink.h"
 #include "macros.h"
 #include "dataLink.h"
+#include <time.h>
 
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"

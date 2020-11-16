@@ -31,6 +31,16 @@ typedef enum
     STOP_CTRL
 }ctrl_states;
 
+typedef enum
+{
+    START_DP,
+    N_DP,
+    L2_DP,
+    L1_DP,
+    P_DP,
+    STOP_DP
+}data_packet_states;
+
 void create_set(char *set);
 
 void create_ua(char *ua);
@@ -49,7 +59,7 @@ void ua_state(char byte, states *state);
 
 void disc_state(char byte, states *state);
 
-void create_frame(const unsigned char *info, size_t size);
+int create_frame(const unsigned char *info, size_t size);
 
 void supervision_state(char byte, states *state);
 
