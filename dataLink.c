@@ -16,6 +16,11 @@ void alarmHandler()
     alarmFlag = TRUE;
     alarm(ll.timeout);
     siginterrupt(SIGALRM, 1);
+    if(count > ll.numTransmissions)
+    {
+        printf("Max tries reached, aborting.\n");
+        exit(1);
+    }
 }
 
 int stuffing(const unsigned char *info, size_t size, unsigned char *stuffed_info)
