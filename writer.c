@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 {
 
 
-    char buf[30000];
+    char buf[65536];
     int i, sum = 0, speed = 0;
 
    if (argc != 3) {

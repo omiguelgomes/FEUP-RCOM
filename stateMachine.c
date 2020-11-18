@@ -80,7 +80,7 @@ int create_bcc2(const unsigned char *info, size_t size, unsigned char *bcc2)
 
 int create_frame(const unsigned char *info, size_t size)
 {
-    char temp[255];
+    char temp[65536];
     memcpy(&temp, info, size);
     char stuffed_info[size * 2];
     int stuffed_size = stuffing(info+4, size, stuffed_info);

@@ -110,7 +110,6 @@ int llwrite(int fd, char *buffer, int length)
     int rej = 0;
     unsigned char splitBuffer[ll.frameSize];
     int frameDataSize = ll.frameSize;
-    
     int bytesNeeded = sizeof(length);
     //CONTROL PACKET BEFORE TRANSMISSION
     unsigned char controlPacket[5+strlen(ll.fileName)+bytesNeeded];
@@ -118,7 +117,6 @@ int llwrite(int fd, char *buffer, int length)
     controlPacket[0] = 2;
     //indicate its filesize
     controlPacket[1] = 0;
-
     //nr of bytes to show fileSize
     controlPacket[2] = bytesNeeded;
     //actual fileSize
@@ -158,7 +156,7 @@ int llwrite(int fd, char *buffer, int length)
     }
 
     // Sends DATA packets
-    unsigned char buf[255];
+    unsigned char buf[65536];
     unsigned char conf;
     unsigned bytes_to_send;
     unsigned int bytesSent = 0;
@@ -167,7 +165,7 @@ int llwrite(int fd, char *buffer, int length)
     while ((bytes_to_send = read(file_fd, buf, frameDataSize)) > 0) {
         bytesSent += bytes_to_send;
 
-        unsigned char dataPacket[255];
+        unsigned char dataPacket[65536];
         dataPacket[0] = 1;
         dataPacket[1] = ll.sequenceNumber % 255;
         dataPacket[2] = (bytes_to_send / 256);
@@ -282,7 +280,7 @@ int llread(int fd, char *buffer)
     int bytesWritten = 0;
 
     printf("\nStarting llread!\n");
-    unsigned char result[255];
+    unsigned char result[65536];
     int stuffed_size = 0;
     unsigned char message[5];
     states state = START;

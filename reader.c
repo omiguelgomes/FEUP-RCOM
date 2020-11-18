@@ -9,8 +9,8 @@ linkLayer ll;
 
 int main(int argc, char** argv)
 {
-    char buf[30000];
-    char result[30000];
+    char buf[65536];
+    char result[65536];
     int i, sum = 0, speed = 0;
 
    if (argc != 2) {
@@ -40,12 +40,12 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    printf("What should the frame size be?\n");
-    if(scanf("%d", &ll.frameSize) != 1)
-    {
-      printf("Invalid number\n");
-      return 1;
-    }
+    // printf("What should the frame size be?\n");
+    // if(scanf("%d", &ll.frameSize) != 1)
+    // {
+    //   printf("Invalid number\n");
+    //   return 1;
+    // }
 //
 //    printf("What should the baudrate be?\n");
 //    if(scanf("%d", BAUDRATE) != 1)
