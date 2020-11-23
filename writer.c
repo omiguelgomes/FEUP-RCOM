@@ -71,15 +71,17 @@ int main(int argc, char** argv)
       perror("tcsetattr");
       exit(-1);
     }
+    
     if(llclose(app.fd) == 1)
     {
       printf("llclose failed\n");
       return 1;
-    } 
+    }
 
     t = clock() - t;
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // calculate the elapsed time
     printf("The transfer took %f seconds to execute\n", time_taken);
-    printf("The transfer rate was %f kBytes/second\n", (fileSize/8)/(time_taken*1000));
+    printf("The transfer rate was %f kBytes/second\n", (fileSize/8)/(time_taken*1000)); 
+    
     return 0;
 }
