@@ -22,6 +22,11 @@ int main(int argc, char** argv)
 
     app.fd = atoi(argv[1]);
 
+    if(app.fd != 0 && app.fd != 1 && app.fd != 10 && app.fd != 11){
+      printf("Port number must be {0, 1, 10, 11}\n");
+      exit(1);
+    }
+
     printf("What should the timeout be?\n");
     if(scanf("%d", &ll.timeout) != 1)
     {
@@ -66,17 +71,15 @@ int main(int argc, char** argv)
       perror("tcsetattr");
       exit(-1);
     }
-    
     if(llclose(app.fd) == 1)
     {
       printf("llclose failed\n");
       return 1;
-    }
+    } 
 
     t = clock() - t;
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // calculate the elapsed time
     printf("The transfer took %f seconds to execute\n", time_taken);
-    printf("The transfer rate was %f kBytes/second\n", (fileSize/8)/(time_taken*1000)); 
-    
+    printf("The transfer rate was %f kBytes/second\n", (fileSize/8)/(time_taken*1000));
     return 0;
 }
