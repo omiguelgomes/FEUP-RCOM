@@ -20,12 +20,7 @@ int main(int argc, char** argv)
 
 
     app.fd = atoi(argv[1]);
-
-    if(app.fd != 0 && app.fd != 1 && app.fd != 10 && app.fd != 11){
-      printf("Port number must be {0, 1, 10, 11}\n");
-      exit(1);
-    }
-
+    printf("%d\n", app.fd);
     printf("What should the timeout be?\n");
     if(scanf("%d", &ll.timeout) != 1)
     {
