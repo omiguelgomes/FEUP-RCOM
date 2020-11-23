@@ -43,14 +43,14 @@ typedef struct
 
 typedef struct {
     char port[20];
-    char fileName[65536];
+    char fileName[255];
     int baudRate;
     int fileSize;
     unsigned int sequenceNumber;
     unsigned int timeout;
     unsigned int numTransmissions;
     unsigned int frameSize;
-    unsigned char frame[65536];
+    unsigned char frame[MAX_SIZE];
 } linkLayer;
 
 #endif

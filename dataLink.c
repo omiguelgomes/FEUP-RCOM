@@ -105,7 +105,7 @@ int openFile(char *buffer, char *fileName)
 int llwrite(int fd, char *buffer, int length)
 {
     printf("\nStarting llwrite!\n");
-    unsigned char result[5];
+    unsigned char result[255];
     int res;
     int rej = 0;
     unsigned char splitBuffer[ll.frameSize];
@@ -229,7 +229,7 @@ int llread(int fd, char *buffer)
     unsigned char bufferCntrl;
     unsigned char bufferTemp;
     unsigned char messsage[5];
-    unsigned char bufferInfo[65536];
+    unsigned char bufferInfo[512];
     unsigned int fileSize = 0;
     int bytesForFileName;
     int bytesForSize;
@@ -563,34 +563,34 @@ int llclose(int fd)
     if(app.status == TRANSMITER) //case transmiter
     {   
         // SEND DISC
-        // printf("Creating DISCONNECT!\n");
-        // unsigned char disc_snd[5];
-        // create_disc(disc_snd);
-        // printf("Sending DISC ...\n");
-        // res = write(app.fd, disc_snd, 5);
+        printf("Creating DISCONNECT!\n");
+        unsigned char disc_snd[5];
+        create_disc(disc_snd);
+        printf("Sending DISC ...\n");
+        res = write(app.fd, disc_snd, 5);
 
         //RECEIVE DISC
-        // unsigned char disc_rcv;
-        // state = START;
-        // alarm(ll.timeout);
-        // for (int i = 0; state != STOP; i++)
-        // {
-        //     // if(alarmFlag && count > ll.numTransmissions)
-        //     // {
-        //     //     printf("Max attempts reached, disconnecting\n");
-        //     //     return 1;
-        //     // }
-        //     // if(alarmFlag)
-        //     // {
-        //     //     printf("Didn't receive DISC, resending DISC\n");
-        //     //     res = write(app.fd, disc_snd, 5);
-        //     //     alarmFlag = FALSE;
-        //     // }
+        unsigned char disc_rcv;
+        state = START;
+        alarm(ll.timeout);
+        for (int i = 0; state != STOP; i++)
+        {
+            if(alarmFlag && count > ll.numTransmissions)
+            {
+                printf("Max attempts reached, disconnecting\n");
+                return 1;
+            }
+            if(alarmFlag)
+            {
+                printf("Didn't receive DISC, resending DISC\n");
+                res = write(app.fd, disc_snd, 5);
+                alarmFlag = FALSE;
+            }
  
-        //     read(app.fd, &disc_rcv, 1);
-        //     disc_state(disc_rcv, &state);
-        // }
-        // alarm(0);
+            read(app.fd, &disc_rcv, 1);
+            disc_state(disc_rcv, &state);
+        }
+        alarm(0);
 
 
         // SEND UA
@@ -601,12 +601,12 @@ int llclose(int fd)
     }
     else //case receiver
     {   
-        // // sSEND DISC
-        // printf("Creating DISCONNECT!\n");
-        // unsigned char disc_snd[5];
-        // create_disc(disc_snd);
-        // printf("Sending DISC ...\n");
-        // res = write(app.fd, disc_snd, 5);
+        // sSEND DISC
+        printf("Creating DISCONNECT!\n");
+        unsigned char disc_snd[5];
+        create_disc(disc_snd);
+        printf("Sending DISC ...\n");
+        res = write(app.fd, disc_snd, 5);
 
         // RECEIVE UA
         alarm(ll.timeout);
@@ -616,17 +616,17 @@ int llclose(int fd)
         state = START;
         for (int i = 0; state != STOP; i++)
         {
-            // if(alarmFlag && count > ll.numTransmissions)
-            // {
-            //     printf("Max attempts reached, disconnecting\n");
-            //     return 1;
-            // }
-            // if(alarmFlag)
-            // {
-            //     //printf("Didn't receive UA, resending DISC\n");
-            //     res = write(app.fd, disc_snd, 5);
-            //     alarmFlag = FALSE;
-            // }
+            if(alarmFlag && count > ll.numTransmissions)
+            {
+                printf("Max attempts reached, disconnecting\n");
+                return 1;
+            }
+            if(alarmFlag)
+            {
+                //printf("Didn't receive UA, resending DISC\n");
+                res = write(app.fd, disc_snd, 5);
+                alarmFlag = FALSE;
+            }
 
             read(fd, &ua, 1);
             ua_state(ua, &state);
